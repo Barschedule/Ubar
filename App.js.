@@ -1014,3 +1014,406 @@ const hasNewUser = pUser.trim().length > 0;
 const hasNewPin = pNew.trim().length > 0;
 if (!hasNewUser && !hasNewPin) {
 setPErr(“Escribe un nuevo usuario y/o un nuevo PIN”);
+```
+     return;
+    }
+    if (hasNewUser && pUser.trim().length < 2) {
+        setPErr("El usuario debe tener al menos 2 caracteres");
+        return;
+    }
+    if (hasNewPin && pNew.length < 4) {
+        setPErr("El PIN debe tener al menos 4 caracteres");
+        return;
+    }
+    if (hasNewPin && pNew !== pConf) {
+        setPErr("Los PINs nuevos no coinciden");
+        return;
+    }
+    // Apply changes
+    if (hasNewPin)
+        await onPin(pNew.trim());
+    if (hasNewUser)
+        await onAdminUser(pUser.trim());
+    setPOk(true);
+    setPCur("");
+    setPNew("");
+    setPConf("");
+    setPUser("");
+    setTimeout(() => { setShowPin(false); setPOk(false); }, 2000);
+};
+// Staff handlers
+const addStaff = () => {
+    const n = newSName.trim();
+    setSErr("");
+    if (!n) {
+        setSErr("Escribe un nombre");
+        return;
+    }
+    if (staff.find(s => s.toLowerCase() === n.toLowerCase())) {
+        setSErr("Ese nombre ya existe");
+        return;
+    }
+    onStaff([...staff, n]);
+    setNewSName("");
+};
+const removeStaff = n => onStaff(staff.filter(s => s !== n));
+// Computed
+const activeArr = Object.values(active);
+const tStock = inv.reduce((a, b) => a + b.stock, 0);
+const crits = inv.filter(i => i.stock <= i.par);
+const nLow = inv.filter(i => i.stock <= i.par * 2).length;
+const todayLogs = logs.filter(l => l.date === dateNow());
+const addCount = todayLogs.filter(l => l.type === ACT.ADD).length;
+const delCount = todayLogs.filter(l => l.type === ACT.DEL).length;
+const adjCount = todayLogs.filter(l => l.type === ACT.STOCK || l.type === ACT.BACKUP).length;
+const allUsers = ["Todos", ...new Set(logs.map(l => l.user))];
+const allTypes = ["Todos", ...Object.keys(ACT)];
+const filtLogs = logs.filter(l => (filterUser === "Todos" || l.user === filterUser) && (filterType === "Todos" || l.type === filterType));
+// Shopping list
+const needsList = inv.filter(i => i.stock < thresh);
+const byDist = dists.map(d => ({ dist: d, items: needsList.filter(i => i.distId === d.id) })).filter(g => g.items.length > 0);
+const unassigned = needsList.filter(i => !i.distId || !dists.find(d => d.id === i.distId));
+const buildText = () => {
+    const lines = [`📋 LISTA DE COMPRAS — ${dateNow()}`, `Stock menor a ${thresh} unidades`, "─".repeat(40)];
+    byDist.forEach(({ dist, items }) => {
+        lines.push(`\n🏢 ${dist.name.toUpperCase()}`);
+        lines.push(`   📞 ${dist.phone}  ✉️ ${dist.email}`);
+        if (dist.rep)
+            lines.push(`   Rep: ${dist.rep}${dist.repPhone ? ` · ${dist.repPhone}` : ""}`);
+        lines.push(`   ${"─".repeat(30)}`);
+        items.forEach(i => { const need = Math.max(0, thresh - i.stock); lines.push(`   ${i.emoji} ${i.name} (${i.unit})`); lines.push(`      Stock: ${i.stock} | Min: ${i.par} | Pedir: +${need}`); });
+    });
+    if (unassigned.length > 0) {
+        lines.push("\n⚠️ SIN DISTRIBUIDORA");
+        unassigned.forEach(i => lines.push(`   ${i.emoji} ${i.name} — Stock: ${i.stock}`));
+    }
+    lines.push(`\n${"─".repeat(40)}\nTotal: ${needsList.length} productos a reponer`);
+    return lines.join("\n");
+};
+const doCopy = () => { navigator.clipboard.writeText(buildText()).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2500); }); };
+const doEmail = () => { window.open(`mailto:?subject=${encodeURIComponent("Lista de Compras — " + dateNow())}&body=${encodeURIComponent(buildText())}`); };
+const stStatus = it => it.stock <= it.par ? { c: "#ff4444", l: "CRITICO" } : it.stock <= it.par * 2 ? { c: "#ffaa00", l: "BAJO" } : { c: "#44cc88", l: "OK" };
+return (React.createElement("div", { style: { minHeight: "100vh", background: "linear-gradient(135deg,#06080a,#0a0d12,#06080a)", fontFamily: "Georgia", color: "#e0eaf0", paddingBottom: 60 } },
+    React.createElement("div", { style: { background: "linear-gradient(180deg,#0a1520,transparent)", borderBottom: "1px solid #1a2a3a", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 } },
+        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
+            React.createElement("div", null,
+                React.createElement("div", { style: { fontSize: 9, letterSpacing: 4, color: "#6eb5c8", textTransform: "uppercase" } }, "Panel de Control"),
+                React.createElement("div", { style: { fontSize: 18, fontWeight: 400, letterSpacing: 2 } }, "\uD83D\uDD10 Admin \u2014 LicorPro")),
+            isSuperAdmin
+                ? React.createElement("div", { style: { background: "linear-gradient(135deg,rgba(200,150,78,.2),rgba(200,150,78,.1))", border: "1px solid rgba(200,150,78,.5)", borderRadius: 20, padding: "4px 12px", fontSize: 10, color: "#c8964e", fontWeight: 700, display: "flex", alignItems: "center", gap: 5 } },
+                    "\uD83D\uDC51 ",
+                    adminUser)
+                : React.createElement("div", { style: { background: "rgba(110,181,200,.08)", border: "1px solid rgba(110,181,200,.2)", borderRadius: 20, padding: "4px 10px", fontSize: 10, color: "#6eb5c8" } },
+                    "\uD83D\uDD10 ",
+                    adminUser || "Admin"),
+            activeArr.length > 0 && React.createElement("div", { style: { background: "rgba(68,204,136,.12)", border: "1px solid rgba(68,204,136,.3)", borderRadius: 20, padding: "3px 10px", fontSize: 10, color: "#44cc88", display: "flex", alignItems: "center", gap: 5 } },
+                React.createElement("span", { style: { width: 6, height: 6, borderRadius: "50%", background: "#44cc88", display: "inline-block", animation: "pulse 1.5s infinite" } }),
+                "\uD83D\uDFE2 ",
+                activeArr.length,
+                " en l\u00EDnea")),
+        React.createElement("div", { style: { display: "flex", gap: 4, background: "rgba(0,0,0,.3)", borderRadius: 9, padding: 3, border: "1px solid #1a2a3a", flexWrap: "wrap" } }, [["live", "🟢 En Vivo"], ["shopping", "🛒 Compras"], ["log", "📜 Historial"], ["inventory", "📦 Inventario"], ["staff", "👥 Empleados"]].map(([t, l]) => (React.createElement("button", { key: t, onClick: () => setTab(t), style: { background: tab === t ? "#6eb5c8" : "transparent", border: "none", borderRadius: 6, padding: "5px 11px", color: tab === t ? "#06080a" : "#6a8a9a", fontSize: 10, cursor: "pointer", fontWeight: tab === t ? 700 : 400, whiteSpace: "nowrap" } }, l)))),
+        React.createElement("div", { style: { display: "flex", gap: 6 } },
+            React.createElement("button", { onClick: refresh, style: S.btn("#1a2a3a", "#6eb5c8") }, "\u21BB"),
+            React.createElement("button", { onClick: () => { setShowPin(true); setPErr(""); setPOk(false); setPUser(""); setPCur(""); setPNew(""); setPConf(""); }, style: S.btn("#1a2a3a", "#c8964e") }, "\uD83D\uDD10 Credenciales"),
+            React.createElement("button", { onClick: onLogout, style: S.btn("#1a2a3a", "#8a9aaa") }, "Salir"))),
+    loading && React.createElement("div", { style: { textAlign: "center", padding: "60px", color: "#6eb5c8", fontSize: 13 } }, "\u23F3 Cargando..."),
+    !loading && (React.createElement("div", null,
+        tab === "live" && (React.createElement("div", { style: { padding: "16px 24px" } },
+            React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(140px,1fr))", gap: 9, marginBottom: 18 } }, [{ l: "En Línea", v: activeArr.length, c: "#44cc88", i: "🟢" }, { l: "Stock Total", v: tStock, c: "#6eb5c8", i: "📦" }, { l: "Crítico", v: crits.length, c: crits.length > 0 ? "#ff4444" : "#44cc88", i: "⚠️" }, { l: "Bajo Mínimo", v: nLow, c: nLow > 0 ? "#ffaa00" : "#44cc88", i: "📉" }, { l: "Añadidos Hoy", v: addCount, c: "#44cc88", i: "➕" }, { l: "Eliminados Hoy", v: delCount, c: delCount > 0 ? "#ff6666" : "#4a5a6a", i: "➖" }, { l: "Ajustes Hoy", v: adjCount, c: "#c8964e", i: "✏️" }, { l: "Cambios Hoy", v: todayLogs.length, c: "#6e8ec8", i: "📋" }].map((s, i) => (React.createElement("div", { key: i, style: { background: "rgba(255,255,255,.025)", border: "1px solid #1a2a3a", borderRadius: 9, padding: "12px 14px" } },
+                React.createElement("div", { style: { fontSize: 8, color: "#4a6a7a", letterSpacing: 1, textTransform: "uppercase" } },
+                    s.i,
+                    " ",
+                    s.l),
+                React.createElement("div", { style: { fontSize: 26, fontWeight: 700, color: s.c, lineHeight: 1.1, marginTop: 3 } }, s.v))))),
+            React.createElement("div", { style: { marginBottom: 18 } },
+                React.createElement("div", { style: { fontSize: 9, letterSpacing: 3, color: "#4a6a7a", textTransform: "uppercase", marginBottom: 10 } }, "Usuarios Activos"),
+                activeArr.length === 0
+                    ? React.createElement("div", { style: { background: "rgba(255,255,255,.02)", border: "1px solid #1a2a3a", borderRadius: 10, padding: "24px", textAlign: "center", color: "#2a4a5a", fontSize: 11 } }, "Nadie conectado")
+                    : React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, activeArr.map(u => (React.createElement("div", { key: u.name, style: { background: "rgba(68,204,136,.08)", border: "1px solid rgba(68,204,136,.25)", borderRadius: 10, padding: "10px 16px", display: "flex", alignItems: "center", gap: 8 } },
+                        React.createElement("div", { style: { width: 8, height: 8, borderRadius: "50%", background: "#44cc88", animation: "pulse 1.5s infinite" } }),
+                        React.createElement("div", null,
+                            React.createElement("div", { style: { fontSize: 12, fontWeight: 600, color: "#e0eaf0" } }, u.name),
+                            React.createElement("div", { style: { fontSize: 8, color: "#4a8a6a" } },
+                                "hace ",
+                                Math.round((Date.now() - u.lastSeen) / 1000),
+                                "s"))))))),
+            crits.length > 0 && React.createElement("div", { style: { background: "rgba(255,68,68,.06)", border: "1px solid rgba(255,68,68,.3)", borderRadius: 10, padding: "12px 16px", marginBottom: 18 } },
+                React.createElement("div", { style: { fontSize: 8, color: "#ff6666", letterSpacing: 2, marginBottom: 6 } }, "INVENTARIO CRITICO"),
+                React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 6 } }, crits.map(i => React.createElement("div", { key: i.id, style: { background: "rgba(255,68,68,.1)", borderRadius: 7, padding: "6px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" } },
+                    React.createElement("span", { style: { fontSize: 10, color: "#f0c8c8" } },
+                        i.emoji,
+                        " ",
+                        i.name),
+                    React.createElement("span", { style: { fontSize: 10, fontWeight: 700, color: "#ff6666" } },
+                        "Stock:",
+                        i.stock,
+                        "/Min:",
+                        i.par))))),
+            React.createElement("div", { style: { fontSize: 9, letterSpacing: 3, color: "#4a6a7a", textTransform: "uppercase", marginBottom: 10 } }, "Actividad Reciente"),
+            React.createElement("div", { style: { background: "rgba(255,255,255,.02)", border: "1px solid #1a2a3a", borderRadius: 11, overflow: "hidden", maxHeight: 340, overflowY: "auto" } },
+                logs.slice(0, 30).map((l, i) => (React.createElement("div", { key: i, style: { display: "grid", gridTemplateColumns: "90px 80px 100px 1fr", padding: "8px 14px", borderBottom: i < 29 ? "1px solid #0d1a22" : "none", alignItems: "center", gap: 8, background: i % 2 === 0 ? "rgba(255,255,255,.01)" : "transparent" } },
+                    React.createElement("div", { style: { fontSize: 8, color: "#3a5a6a" } }, l.date),
+                    React.createElement("div", { style: { fontSize: 8, color: "#3a6a8a" } }, l.ts),
+                    React.createElement("div", null,
+                        React.createElement("span", { style: { background: "rgba(110,181,200,.1)", border: "1px solid rgba(110,181,200,.2)", borderRadius: 10, padding: "1px 7px", fontSize: 8, color: "#6eb5c8" } }, l.user)),
+                    React.createElement("div", null,
+                        React.createElement("span", { style: { background: `${ACT_CLR[l.type] || "#888"}18`, border: `1px solid ${ACT_CLR[l.type] || "#888"}33`, color: ACT_CLR[l.type] || "#888", borderRadius: 10, padding: "1px 6px", fontSize: 7, fontWeight: 700, marginRight: 5 } }, ACT_LBL[l.type] || l.type),
+                        React.createElement("span", { style: { fontSize: 9, color: "#7a8a9a" } },
+                            l.item !== "—" && React.createElement("b", { style: { color: "#c8d4e0" } }, l.item),
+                            l.detail && l.detail !== l.item ? React.createElement(React.Fragment, null,
+                                " \u2014 ",
+                                l.detail) : ""))))),
+                logs.length === 0 && React.createElement("div", { style: { textAlign: "center", padding: "32px", color: "#2a3a4a", fontSize: 11 } }, "Sin actividad a\u00FAn")))),
+        tab === "shopping" && (React.createElement("div", { style: { padding: "20px 24px" } },
+            React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 20 } },
+                React.createElement("div", null,
+                    React.createElement("div", { style: { fontSize: 9, letterSpacing: 3, color: "#4a6a7a", textTransform: "uppercase", marginBottom: 4 } }, "Lista Autom\u00E1tica de Compras"),
+                    React.createElement("div", { style: { fontSize: 11, color: "#6a8a9a" } }, "Productos con stock por debajo del l\u00EDmite \u2014 tiempo real")),
+                React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" } },
+                    React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 7, background: "rgba(255,255,255,.03)", border: "1px solid #1a2a3a", borderRadius: 9, padding: "6px 12px" } },
+                        React.createElement("span", { style: { fontSize: 9, color: "#4a6a7a", textTransform: "uppercase", letterSpacing: 1 } }, "L\u00EDmite"),
+                        React.createElement("button", { onClick: () => setThresh(t => Math.max(1, t - 1)), style: S.miniD }, "\u2212"),
+                        React.createElement("span", { style: { fontSize: 15, fontWeight: 700, color: "#ff6666", minWidth: 24, textAlign: "center" } }, thresh),
+                        React.createElement("button", { onClick: () => setThresh(t => t + 1), style: S.miniD }, "+"),
+                        React.createElement("span", { style: { fontSize: 9, color: "#4a6a7a" } }, "unidades")),
+                    React.createElement("button", { onClick: doCopy, style: { ...S.btn(copied ? "#44cc88" : "#1a3a4a", copied ? "#06080a" : "#6eb5c8"), fontSize: 11 } }, copied ? "✅ Copiado" : "📋 Copiar"),
+                    React.createElement("button", { onClick: doEmail, style: { ...S.btn("#1a2540", "#6e8ec8"), fontSize: 11 } }, "\u2709\uFE0F Email"),
+                    React.createElement("button", { onClick: refresh, style: { ...S.btn("#1a2a3a", "#6eb5c8"), fontSize: 11 } }, "\u21BB"))),
+            needsList.length === 0
+                ? React.createElement("div", { style: { background: "rgba(68,204,136,.06)", border: "1px solid rgba(68,204,136,.2)", borderRadius: 14, padding: "48px", textAlign: "center" } },
+                    React.createElement("div", { style: { fontSize: 36, marginBottom: 10 } }, "\u2705"),
+                    React.createElement("div", { style: { fontSize: 14, color: "#44cc88", fontWeight: 600 } }, "Todo el inventario est\u00E1 bien surtido"),
+                    React.createElement("div", { style: { fontSize: 10, color: "#3a6a4a", marginTop: 4 } },
+                        "Ning\u00FAn producto con stock menor a ",
+                        thresh))
+                : (React.createElement("div", null,
+                    React.createElement("div", { style: { background: "rgba(255,68,68,.07)", border: "1px solid rgba(255,68,68,.25)", borderRadius: 11, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" } },
+                        React.createElement("div", { style: { fontSize: 28, fontWeight: 700, color: "#ff5555" } }, needsList.length),
+                        React.createElement("div", null,
+                            React.createElement("div", { style: { fontSize: 11, color: "#f0c8c8", fontWeight: 600 } },
+                                "producto",
+                                needsList.length !== 1 ? "s" : "",
+                                " necesitan reposici\u00F3n"),
+                            React.createElement("div", { style: { fontSize: 9, color: "#7a4a4a" } },
+                                "Stock bajo ",
+                                thresh,
+                                " unidades \u00B7 ",
+                                byDist.length,
+                                " distribuidora",
+                                byDist.length !== 1 ? "s" : "")),
+                        React.createElement("div", { style: { marginLeft: "auto", fontSize: 9, color: "#4a2a2a" } }, dateNow())),
+                    React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } },
+                        byDist.map(({ dist, items }) => (React.createElement("div", { key: dist.id, style: { background: "rgba(255,255,255,.02)", border: `1px solid ${dist.color}33`, borderRadius: 12, overflow: "hidden" } },
+                            React.createElement("div", { style: { background: `linear-gradient(135deg,${dist.color}20,transparent)`, borderBottom: `1px solid ${dist.color}22`, padding: "11px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 } },
+                                React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
+                                    React.createElement("div", { style: { width: 10, height: 10, borderRadius: "50%", background: dist.color } }),
+                                    React.createElement("div", null,
+                                        React.createElement("div", { style: { fontSize: 12, fontWeight: 700, color: "#e0eaf0" } }, dist.name),
+                                        React.createElement("div", { style: { fontSize: 9, color: "#4a6a7a" } },
+                                            items.length,
+                                            " producto",
+                                            items.length !== 1 ? "s" : "",
+                                            " \u00B7 Rep: ",
+                                            dist.rep || "—"))),
+                                React.createElement("div", { style: { display: "flex", gap: 6 } },
+                                    React.createElement("a", { href: `tel:${dist.phone}`, style: { background: `${dist.color}22`, border: `1px solid ${dist.color}44`, color: dist.color, borderRadius: 6, padding: "4px 10px", fontSize: 9, fontWeight: 600, textDecoration: "none" } },
+                                        "\uD83D\uDCDE ",
+                                        dist.phone),
+                                    React.createElement("a", { href: `mailto:${dist.email}?subject=${encodeURIComponent("Pedido Urgente " + dateNow())}&body=${encodeURIComponent("Hola " + dist.rep + ",\n\nNecesitamos reponer:\n\n" + items.map(i => `• ${i.name} (${i.unit}) — Stock: ${i.stock}, pedir: +${Math.max(0, thresh - i.stock)}`).join("\n") + "\n\nGracias.")}`, style: { background: "rgba(110,181,200,.12)", border: "1px solid rgba(110,181,200,.3)", color: "#6eb5c8", borderRadius: 6, padding: "4px 10px", fontSize: 9, fontWeight: 600, textDecoration: "none" } }, "\u2709\uFE0F Email pedido"))),
+                            React.createElement("div", null, items.map((it, idx) => {
+                                const need = Math.max(1, thresh - it.stock);
+                                const pct = Math.min(100, (it.stock / thresh) * 100);
+                                return (React.createElement("div", { key: it.id, style: { display: "grid", gridTemplateColumns: "auto 1fr auto auto auto", padding: "10px 16px", borderBottom: idx < items.length - 1 ? "1px solid #0d1a22" : "none", alignItems: "center", gap: 12, background: it.stock === 0 ? "rgba(255,30,30,.06)" : "transparent" } },
+                                    React.createElement("span", { style: { fontSize: 20 } }, it.emoji),
+                                    React.createElement("div", null,
+                                        React.createElement("div", { style: { fontSize: 11, color: "#d0dce8", fontWeight: 500 } }, it.name),
+                                        React.createElement("div", { style: { fontSize: 8, color: CAT_CLR[it.category] || "#5a6a7a" } },
+                                            it.category,
+                                            " \u00B7 ",
+                                            it.unit),
+                                        React.createElement("div", { style: { marginTop: 4, height: 3, background: "#1a2a3a", borderRadius: 3, width: 120, overflow: "hidden" } },
+                                            React.createElement("div", { style: { height: "100%", width: `${pct}%`, background: it.stock === 0 ? "#ff3333" : it.stock < thresh / 2 ? "#ff7700" : "#ffaa00", borderRadius: 3 } }))),
+                                    React.createElement("div", { style: { textAlign: "center" } },
+                                        React.createElement("div", { style: { fontSize: 7, color: "#3a5a6a", marginBottom: 1 } }, "STOCK"),
+                                        React.createElement("div", { style: { fontSize: 16, fontWeight: 700, color: it.stock === 0 ? "#ff3333" : "#ff7700" } }, it.stock)),
+                                    React.createElement("div", { style: { textAlign: "center" } },
+                                        React.createElement("div", { style: { fontSize: 7, color: "#3a5a6a", marginBottom: 1 } }, "M\u00CDNIMO"),
+                                        React.createElement("div", { style: { fontSize: 13, color: "#8a9aaa" } }, it.par)),
+                                    React.createElement("div", { style: { textAlign: "center", minWidth: 60 } },
+                                        React.createElement("div", { style: { fontSize: 7, color: "#3a5a6a", marginBottom: 1 } }, "PEDIR"),
+                                        React.createElement("div", { style: { background: "rgba(255,100,100,.15)", border: "1px solid rgba(255,100,100,.3)", borderRadius: 6, padding: "3px 10px", fontSize: 13, fontWeight: 700, color: "#ff8888" } },
+                                            "+",
+                                            need))));
+                            }))))),
+                        unassigned.length > 0 && (React.createElement("div", { style: { background: "rgba(255,255,255,.02)", border: "1px solid #2a2a1a", borderRadius: 12, overflow: "hidden" } },
+                            React.createElement("div", { style: { background: "rgba(200,150,50,.1)", borderBottom: "1px solid rgba(200,150,50,.2)", padding: "11px 16px" } },
+                                React.createElement("div", { style: { fontSize: 11, fontWeight: 700, color: "#c8964e" } }, "\u26A0\uFE0F Sin distribuidora asignada")),
+                            unassigned.map((it, idx) => (React.createElement("div", { key: it.id, style: { display: "grid", gridTemplateColumns: "auto 1fr auto auto", padding: "9px 16px", borderBottom: idx < unassigned.length - 1 ? "1px solid #1a1a0a" : "none", alignItems: "center", gap: 12 } },
+                                React.createElement("span", { style: { fontSize: 18 } }, it.emoji),
+                                React.createElement("div", null,
+                                    React.createElement("div", { style: { fontSize: 11, color: "#c8b88a" } }, it.name),
+                                    React.createElement("div", { style: { fontSize: 8, color: "#6a5a3a" } },
+                                        it.category,
+                                        " \u00B7 ",
+                                        it.unit)),
+                                React.createElement("div", { style: { textAlign: "center" } },
+                                    React.createElement("div", { style: { fontSize: 7, color: "#5a4a2a", marginBottom: 1 } }, "STOCK"),
+                                    React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: "#ff7700" } }, it.stock)),
+                                React.createElement("div", { style: { textAlign: "center", minWidth: 56 } },
+                                    React.createElement("div", { style: { fontSize: 7, color: "#5a4a2a", marginBottom: 1 } }, "PEDIR"),
+                                    React.createElement("div", { style: { background: "rgba(200,150,50,.15)", border: "1px solid rgba(200,150,50,.3)", borderRadius: 6, padding: "2px 8px", fontSize: 12, fontWeight: 700, color: "#c8a060" } },
+                                        "+",
+                                        Math.max(1, thresh - it.stock))))))))))))),
+        tab === "log" && (React.createElement("div", { style: { padding: "16px 24px" } },
+            React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 } },
+                React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" } },
+                    React.createElement("span", { style: { fontSize: 9, color: "#4a6a7a" } }, "Usuario:"),
+                    React.createElement("select", { value: filterUser, onChange: e => setFUser(e.target.value), style: { ...S.inputD, padding: "4px 8px", fontSize: 10 } }, allUsers.map(u => React.createElement("option", { key: u, value: u }, u))),
+                    React.createElement("span", { style: { fontSize: 9, color: "#4a6a7a" } }, "Tipo:"),
+                    React.createElement("select", { value: filterType, onChange: e => setFType(e.target.value), style: { ...S.inputD, padding: "4px 8px", fontSize: 10 } }, allTypes.map(t => React.createElement("option", { key: t, value: t }, t === "Todos" ? t : ACT_LBL[t] || t))),
+                    React.createElement("span", { style: { fontSize: 9, color: "#4a6a7a" } },
+                        filtLogs.length,
+                        " entradas")),
+                React.createElement("button", { onClick: async () => { await shSet("lp:logs", []); setLogs([]); }, style: { ...S.btn("#3a1010", "#ff6666"), fontSize: 10 } }, "\uD83D\uDDD1\uFE0F Limpiar")),
+            React.createElement("div", { style: { background: "rgba(255,255,255,.02)", border: "1px solid #1a2a3a", borderRadius: 11, overflow: "hidden" } },
+                React.createElement("div", { style: { display: "grid", gridTemplateColumns: "90px 80px 100px 1fr 1fr", padding: "7px 14px", fontSize: 7, color: "#3a5a6a", letterSpacing: 1.5, textTransform: "uppercase", borderBottom: "1px solid #1a2a3a", background: "#060c12" } },
+                    React.createElement("div", null, "Fecha"),
+                    React.createElement("div", null, "Hora"),
+                    React.createElement("div", null, "Usuario"),
+                    React.createElement("div", null, "Accion"),
+                    React.createElement("div", null, "Detalle")),
+                React.createElement("div", { style: { maxHeight: 520, overflowY: "auto" } },
+                    filtLogs.map((l, i) => (React.createElement("div", { key: i, style: { display: "grid", gridTemplateColumns: "90px 80px 100px 1fr 1fr", padding: "7px 14px", borderBottom: i < filtLogs.length - 1 ? "1px solid #0d1a22" : "none", alignItems: "center", gap: 6, background: i % 2 === 0 ? "rgba(255,255,255,.01)" : "transparent" } },
+                        React.createElement("div", { style: { fontSize: 8, color: "#3a5a6a" } }, l.date),
+                        React.createElement("div", { style: { fontSize: 8, color: "#3a6a8a" } }, l.ts),
+                        React.createElement("div", null,
+                            React.createElement("span", { style: { background: "rgba(110,181,200,.08)", border: "1px solid rgba(110,181,200,.15)", borderRadius: 10, padding: "1px 6px", fontSize: 8, color: "#6eb5c8" } }, l.user)),
+                        React.createElement("div", null,
+                            React.createElement("span", { style: { background: `${ACT_CLR[l.type] || "#888"}18`, border: `1px solid ${ACT_CLR[l.type] || "#888"}30`, color: ACT_CLR[l.type] || "#888", borderRadius: 10, padding: "1px 6px", fontSize: 7, fontWeight: 700 } }, ACT_LBL[l.type] || l.type)),
+                        React.createElement("div", { style: { fontSize: 9, color: "#7a8a9a" } },
+                            l.item !== "—" && React.createElement("b", { style: { color: "#b0c0d0" } }, l.item),
+                            l.detail && l.detail !== l.item ? React.createElement(React.Fragment, null,
+                                " \u2014 ",
+                                l.detail) : "")))),
+                    filtLogs.length === 0 && React.createElement("div", { style: { textAlign: "center", padding: "32px", color: "#2a3a4a", fontSize: 11 } }, "Sin registros"))))),
+        tab === "inventory" && (React.createElement("div", { style: { padding: "16px 24px" } },
+            React.createElement("div", { style: { fontSize: 9, color: "#4a6a7a", marginBottom: 12 } },
+                "Solo lectura \u2014 ",
+                inv.length,
+                " productos"),
+            React.createElement("div", { style: { background: "rgba(255,255,255,.02)", border: "1px solid #1a2a3a", borderRadius: 11, overflow: "hidden" } },
+                React.createElement("div", { style: { display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr", padding: "7px 14px", fontSize: 7, color: "#3a5a6a", letterSpacing: 1.5, textTransform: "uppercase", borderBottom: "1px solid #1a2a3a", background: "#060c12" } },
+                    React.createElement("div", null, "Producto"),
+                    React.createElement("div", { style: { textAlign: "center" } }, "Stock"),
+                    React.createElement("div", { style: { textAlign: "center" } }, "Backup"),
+                    React.createElement("div", { style: { textAlign: "center" } }, "Min"),
+                    React.createElement("div", { style: { textAlign: "center" } }, "Vel"),
+                    React.createElement("div", { style: { textAlign: "center" } }, "Estado")),
+                React.createElement("div", { style: { maxHeight: 560, overflowY: "auto" } }, inv.map((it, idx) => {
+                    const st = stStatus(it);
+                    return (React.createElement("div", { key: it.id, style: { display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr", padding: "8px 14px", borderBottom: idx < inv.length - 1 ? "1px solid #0d1a22" : "none", alignItems: "center", background: it.stock <= it.par ? "rgba(255,68,68,.025)" : idx % 2 === 0 ? "rgba(255,255,255,.01)" : "transparent" } },
+                        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 7 } },
+                            React.createElement("span", { style: { fontSize: 16 } }, it.emoji),
+                            React.createElement("div", null,
+                                React.createElement("div", { style: { fontSize: 11, color: "#d0dce8" } }, it.name),
+                                React.createElement("div", { style: { fontSize: 8, color: CAT_CLR[it.category] || "#6a7a8a" } },
+                                    it.category,
+                                    " \u00B7 ",
+                                    it.unit))),
+                        React.createElement("div", { style: { textAlign: "center", fontSize: 13, fontWeight: 700, color: st.c } }, it.stock),
+                        React.createElement("div", { style: { textAlign: "center", fontSize: 12, color: "#6e8ec8" } }, it.backup),
+                        React.createElement("div", { style: { textAlign: "center", fontSize: 11, color: "#8a9aaa" } }, it.par),
+                        React.createElement("div", { style: { textAlign: "center", fontSize: 10, color: it.trend === "up" ? "#44cc88" : it.trend === "down" ? "#ff6666" : "#c8964e" } },
+                            it.trend === "up" ? "↗" : it.trend === "down" ? "↘" : "→",
+                            " ",
+                            it.velocity),
+                        React.createElement("div", { style: { textAlign: "center" } },
+                            React.createElement("span", { style: { background: `${st.c}22`, border: `1px solid ${st.c}55`, color: st.c, borderRadius: 20, padding: "1px 6px", fontSize: 7, fontWeight: 700 } }, st.l))));
+                }))))),
+        tab === "staff" && (React.createElement("div", { style: { padding: "20px 24px", maxWidth: 680 } },
+            React.createElement("div", { style: { background: staff.length > 0 ? "rgba(68,204,136,.07)" : "rgba(200,150,78,.07)", border: `1px solid ${staff.length > 0 ? "rgba(68,204,136,.25)" : "rgba(200,150,78,.25)"}`, borderRadius: 11, padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" } },
+                React.createElement("div", null,
+                    React.createElement("div", { style: { fontSize: 10, fontWeight: 600, color: staff.length > 0 ? "#44cc88" : "#c8964e", marginBottom: 2 } }, staff.length > 0 ? `🔒 Lista activa — ${staff.length} empleado${staff.length !== 1 ? "s" : ""} autorizado${staff.length !== 1 ? "s" : ""}` : "🔓 Sin restricción — cualquier nombre puede entrar"),
+                    React.createElement("div", { style: { fontSize: 9, color: "#4a6a7a" } }, staff.length > 0 ? "Solo los nombres en esta lista pueden acceder." : "Agrega al menos un empleado para activar la restricción.")),
+                staff.length > 0 && React.createElement("button", { onClick: () => onStaff([]), style: { background: "rgba(255,68,68,.1)", border: "1px solid rgba(255,68,68,.3)", color: "#ff7777", borderRadius: 7, padding: "5px 12px", cursor: "pointer", fontSize: 10, fontWeight: 600 } }, "\uD83D\uDD13 Quitar restricci\u00F3n")),
+            React.createElement("div", { style: { background: "rgba(255,255,255,.02)", border: "1px solid #1a2a3a", borderRadius: 11, padding: "18px 20px", marginBottom: 16 } },
+                React.createElement("div", { style: { fontSize: 9, letterSpacing: 2, color: "#4a6a7a", textTransform: "uppercase", marginBottom: 12 } }, "A\u00F1adir Empleado"),
+                React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" } },
+                    React.createElement("input", { value: newSName, onChange: e => { setNewSName(e.target.value); setSErr(""); }, onKeyDown: e => e.key === "Enter" && addStaff(), placeholder: "Nombre del empleado...", style: { ...S.inputD, flex: 1, minWidth: 180, border: `1px solid ${sErr ? "#ff4444" : "#1a2a3a"}` }, autoFocus: true }),
+                    React.createElement("button", { onClick: addStaff, style: { ...S.btn("#44cc88", "#06080a"), fontSize: 12, padding: "9px 18px" } }, "+ A\u00F1adir")),
+                sErr && React.createElement("div", { style: { color: "#ff6666", fontSize: 10, marginTop: 6 } },
+                    "\u26A0\uFE0F ",
+                    sErr)),
+            staff.length === 0
+                ? React.createElement("div", { style: { background: "rgba(255,255,255,.015)", border: "1px dashed #1a2a3a", borderRadius: 11, padding: "36px", textAlign: "center", color: "#2a4a5a" } },
+                    React.createElement("div", { style: { fontSize: 28, marginBottom: 8 } }, "\uD83D\uDC65"),
+                    React.createElement("div", { style: { fontSize: 12 } }, "No hay empleados registrados"))
+                : React.createElement("div", { style: { background: "rgba(255,255,255,.02)", border: "1px solid #1a2a3a", borderRadius: 11, overflow: "hidden" } },
+                    React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr auto auto", padding: "8px 16px", fontSize: 7, color: "#3a5a6a", letterSpacing: 1.5, textTransform: "uppercase", borderBottom: "1px solid #1a2a3a", background: "#060c12" } },
+                        React.createElement("div", null, "Empleado"),
+                        React.createElement("div", { style: { textAlign: "center", paddingRight: 8 } }, "\u00DAltimo acceso"),
+                        React.createElement("div", { style: { textAlign: "center" } }, "Acci\u00F3n")),
+                    staff.map((name, idx) => {
+                        const lastLog = logs.find(l => l.user.toLowerCase() === name.toLowerCase() && l.type === ACT.LOGIN);
+                        const isOnline = Object.values(active).some(u => u.name.toLowerCase() === name.toLowerCase());
+                        return (React.createElement("div", { key: name, style: { display: "grid", gridTemplateColumns: "1fr auto auto", padding: "11px 16px", borderBottom: idx < staff.length - 1 ? "1px solid #0d1a22" : "none", alignItems: "center", gap: 12, background: isOnline ? "rgba(68,204,136,.04)" : idx % 2 === 0 ? "rgba(255,255,255,.01)" : "transparent" } },
+                            React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
+                                React.createElement("div", { style: { width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#1a3a4a,#0d2030)", border: `2px solid ${isOnline ? "#44cc88" : "#1a2a3a"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, flexShrink: 0 } }, name.charAt(0).toUpperCase()),
+                                React.createElement("div", null,
+                                    React.createElement("div", { style: { fontSize: 12, color: "#d0dce8", fontWeight: 500 } }, name),
+                                    isOnline && React.createElement("div", { style: { fontSize: 8, color: "#44cc88", display: "flex", alignItems: "center", gap: 3 } },
+                                        React.createElement("span", { style: { width: 5, height: 5, borderRadius: "50%", background: "#44cc88", display: "inline-block", animation: "pulse 1.5s infinite" } }),
+                                        "En l\u00EDnea"))),
+                            React.createElement("div", { style: { fontSize: 9, color: "#3a5a6a", paddingRight: 8, textAlign: "right" } }, lastLog ? React.createElement("span", { style: { color: "#4a7a8a" } },
+                                lastLog.date,
+                                " ",
+                                lastLog.ts) : React.createElement("span", { style: { color: "#2a3a4a" } }, "Sin accesos")),
+                            React.createElement("div", null,
+                                React.createElement("button", { onClick: () => removeStaff(name), disabled: isOnline, style: { background: isOnline ? "rgba(255,255,255,.04)" : "rgba(255,68,68,.1)", border: `1px solid ${isOnline ? "#1a2a3a" : "rgba(255,68,68,.3)"}`, color: isOnline ? "#2a3a4a" : "#ff7777", borderRadius: 6, padding: "4px 10px", cursor: isOnline ? "not-allowed" : "pointer", fontSize: 9, fontWeight: 600 } }, isOnline ? "En uso" : "✕ Quitar"))));
+                    })))))),
+    showPin && (React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,.88)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center" } },
+        React.createElement("div", { style: { background: "#0a0f16", border: "1px solid #3a2a0a", borderRadius: 16, padding: 28, width: 340, boxShadow: "0 30px 80px rgba(0,0,0,.8)" } },
+            React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 } },
+                React.createElement("div", null,
+                    React.createElement("div", { style: { fontSize: 9, letterSpacing: 3, color: "#c8964e", textTransform: "uppercase", marginBottom: 2 } }, isSuperAdmin ? "👑 Super Admin" : "🔐 Admin"),
+                    React.createElement("div", { style: { fontSize: 15, color: "#e0eaf0", fontWeight: 500 } }, "Cambiar Credenciales")),
+                React.createElement("button", { onClick: () => setShowPin(false), style: { background: "none", border: "none", color: "#3a5a6a", cursor: "pointer", fontSize: 18 } }, "\u2715")),
+            pOk ? (React.createElement("div", { style: { textAlign: "center", padding: "28px 0" } },
+                React.createElement("div", { style: { fontSize: 36, marginBottom: 10 } }, "\u2705"),
+                React.createElement("div", { style: { fontSize: 14, color: "#44cc88", fontWeight: 700, marginBottom: 4 } }, "\u00A1Guardado!"),
+                React.createElement("div", { style: { fontSize: 11, color: "#4a8a6a" } },
+                    pUser ? `Usuario: ${pUser}` : "",
+                    pNew && pUser ? " · " : "",
+                    pNew ? "PIN actualizado" : ""))) : (React.createElement("div", null,
+                React.createElement("div", { style: { background: "rgba(110,181,200,.06)", border: "1px solid rgba(110,181,200,.15)", borderRadius: 9, padding: "10px 14px", marginBottom: 18 } },
+                    React.createElement("div", { style: { fontSize: 8, color: "#4a6a7a", letterSpacing: 1, marginBottom: 5 } }, "CREDENCIALES ACTUALES"),
+                    React.createElement("div", { style: { display: "flex", gap: 16 } },
+                        React.createElement("div", null,
+                            React.createElement("div", { style: { fontSize: 8, color: "#3a5a6a" } }, "USUARIO"),
+                            React.createElement("div", { style: { fontSize: 12, color: "#c8d4e0", fontWeight: 600, marginTop: 2 } }, adminUser || "Admin")),
+                        React.createElement("div", null,
+                            React.createElement("div", { style: { fontSize: 8, color: "#3a5a6a" } }, "PIN"),
+                            React.createElement("div", { style: { fontSize: 12, color: "#c8d4e0", letterSpacing: 4, marginTop: 2 } }, "•".repeat(pin?.length || 4))))),
+                React.createElement("div", { style: { marginBottom: 14 } },
+                    React.createElement("div", { style: { fontSize: 9, color: "#6eb5c8", letterSpacing: 1, marginBottom: 5, textTransform: "uppercase" } }, "1. Confirma tu PIN actual"),
+                    React.createElement("input", { type: "password", value: pCur, onChange: e => { setPCur(e.target.value); setPErr(""); }, placeholder: "Escribe el PIN actual", style: { ...S.inputD, width: "100%", boxSizing: "border-box", letterSpacing: 4, fontSize: 16, textAlign: "center" }, autoFocus: true })),
+                React.createElement("div", { style: { fontSize: 9, color: "#2a4a5a", marginBottom: 10, textAlign: "center", letterSpacing: .5 } }, "\u2014 Deja vac\u00EDo lo que NO quieras cambiar \u2014"),
+                React.createElement("div", { style: { marginBottom: 12 } },
+                    React.createElement("div", { style: { fontSize: 9, color: "#6a8a9a", letterSpacing: 1, marginBottom: 5, textTransform: "uppercase" } }, "2. Nuevo nombre de usuario (opcional)"),
+                    React.createElement("input", { type: "text", value: pUser, onChange: e => { setPUser(e.target.value); setPErr(""); }, placeholder: `Ej: Fabinho  (actual: ${adminUser || "Admin"})`, style: { ...S.inputD, width: "100%", boxSizing: "border-box" } })),
+                React.createElement("div", { style: { marginBottom: 12 } },
+                    React.createElement("div", { style: { fontSize: 9, color: "#6a8a9a", letterSpacing: 1, marginBottom: 5, textTransform: "uppercase" } }, "3. Nuevo PIN (opcional)"),
+                    React.createElement("input", { type: "password", value: pNew, onChange: e => { setPNew(e.target.value); setPErr(""); }, placeholder: "M\u00EDnimo 4 caracteres", style: { ...S.inputD, width: "100%", boxSizing: "border-box", letterSpacing: 3 } })),
+                pNew.length > 0 && (React.createElement("div", { style: { marginBottom: 12 } },
+                    React.createElement("div", { style: { fontSize: 9, color: "#6a8a9a", letterSpacing: 1, marginBottom: 5, textTransform: "uppercase" } }, "4. Confirmar nuevo PIN"),
+                    React.createElement("input", { type: "password", value: pConf, onChange: e => { setPConf(e.target.value); setPErr(""); }, onKeyDown: e => e.key === "Enter" && doChangePin(), placeholder: "Repite el nuevo PIN", style: { ...S.inputD, width: "100%", boxSizing: "border-box", letterSpacing: 3 } }))),
+                pErr && (React.createElement("div", { style: { color: "#ff8888", fontSize: 11, marginBottom: 12, background: "rgba(255,68,68,.08)", border: "1px solid rgba(255,68,68,.25)", borderRadius: 7, padding: "8px 11px", display: "flex", alignItems: "center", gap: 7 } },
+                    React.createElement("span", { style: { fontSize: 14, flexShrink: 0 } }, "\u26A0\uFE0F"),
+                    React.createElement("span", null, pErr))),
+                React.createElement("div", { style: { display: "flex", gap: 7, marginTop: 4 } },
+                    React.createElement("button", { onClick: doChangePin, style: { ...S.btn("#c8964e"), flex: 1, fontSize: 12, padding: "10px" } }, "\uD83D\uDCBE Guardar cambios"),
+                    React.createElement("button", { onClick: () => { setShowPin(false); setPErr(""); }, style: { ...S.btn("#1a2a3a", "#6a8a9a"), fontSize: 12 } }, "Cancelar"))))))),
+    React.createElement("style", null, `@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}} button:hover{opacity:.82} input::placeholder,textarea::placeholder{color:#3a4a5a}`)));
+```
+
+}
