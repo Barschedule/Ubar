@@ -1,1 +1,580 @@
-
+“use strict”;
+// ── CONSTANTS ─────────────────────────────────────────────────────────────────
+const DEFAULT_PIN = “1234”;
+const POLL_MS = 4000;
+const SUPER_ADMIN = “Fabinho”; // Solo este usuario puede cambiar credenciales y empleados
+const INIT_INV = [
+// ── WHISKY / SCOTCH / BOURBON ─────────────────────────────────────────────
+{ id: 1, name: “Jameson”, category: “Whisky”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 3.5, trend: “up”, emoji: “🥃”, distId: 1 },
+{ id: 2, name: “Jim Beam”, category: “Whisky”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 3.2, trend: “stable”, emoji: “🥃”, distId: 1 },
+{ id: 3, name: “Monkey’s Shoulder”, category: “Whisky”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 2.8, trend: “up”, emoji: “🥃”, distId: 1 },
+{ id: 4, name: “Wild Turkey”, category: “Whisky”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 2.5, trend: “stable”, emoji: “🥃”, distId: 1 },
+{ id: 5, name: “Grant’s Triple Wood”, category: “Whisky”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 2.2, trend: “stable”, emoji: “🥃”, distId: 1 },
+{ id: 6, name: “Blended Single Malt Scotch”, category: “Whisky”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 2.0, trend: “stable”, emoji: “🥃”, distId: 1 },
+{ id: 7, name: “Crown Royal Woods”, category: “Whisky”, unit: “750ml”, stock: 1, backup: 1, par: 1, velocity: 1.8, trend: “stable”, emoji: “🥃”, distId: 1 },
+{ id: 8, name: “Crown Royal Apple”, category: “Whisky”, unit: “750ml”, stock: 1, backup: 1, par: 1, velocity: 2.0, trend: “up”, emoji: “🥃”, distId: 1 },
+{ id: 9, name: “Crown Royal Beach”, category: “Whisky”, unit: “750ml”, stock: 1, backup: 1, par: 1, velocity: 1.6, trend: “up”, emoji: “🥃”, distId: 1 },
+{ id: 10, name: “Makers Mark”, category: “Whisky”, unit: “750ml”, stock: 3, backup: 3, par: 3, velocity: 3.8, trend: “up”, emoji: “🥃”, distId: 1 },
+{ id: 11, name: “Basil Hayden”, category: “Whisky”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 2.3, trend: “up”, emoji: “🥃”, distId: 1 },
+{ id: 12, name: “Fireball”, category: “Licores”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 4.5, trend: “up”, emoji: “🔥”, distId: 1 },
+// ── COGNAC ────────────────────────────────────────────────────────────────
+{ id: 13, name: “Hennessy”, category: “Cognac”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 3.0, trend: “up”, emoji: “🍷”, distId: 1 },
+{ id: 14, name: “Martell Cordon Bleu”, category: “Cognac”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 1.8, trend: “stable”, emoji: “🍷”, distId: 1 },
+// ── VODKA ─────────────────────────────────────────────────────────────────
+{ id: 15, name: “House Vodka”, category: “Vodka”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 5.0, trend: “up”, emoji: “🍸”, distId: 1 },
+{ id: 16, name: “Grey Goose”, category: “Vodka”, unit: “750ml”, stock: 1, backup: 1, par: 1, velocity: 3.5, trend: “up”, emoji: “🍸”, distId: 1 },
+{ id: 17, name: “Tito’s”, category: “Vodka”, unit: “750ml”, stock: 4, backup: 4, par: 4, velocity: 6.2, trend: “up”, emoji: “🍸”, distId: 1 },
+{ id: 18, name: “New Amsterdam Vodka”, category: “Vodka”, unit: “750ml”, stock: 3, backup: 3, par: 3, velocity: 4.5, trend: “up”, emoji: “🍸”, distId: 1 },
+{ id: 19, name: “Kettle One”, category: “Vodka”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 3.0, trend: “stable”, emoji: “🍸”, distId: 1 },
+{ id: 20, name: “Watermelon Basil Vodka”, category: “Vodka”, unit: “750ml”, stock: 1, backup: 1, par: 1, velocity: 2.0, trend: “up”, emoji: “🍸”, distId: 1 },
+// ── GIN ───────────────────────────────────────────────────────────────────
+{ id: 21, name: “Bombay Sapphire”, category: “Gin”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 2.8, trend: “stable”, emoji: “🫙”, distId: 1 },
+{ id: 22, name: “Hendricks”, category: “Gin”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 2.5, trend: “up”, emoji: “🫙”, distId: 1 },
+// ── RON ───────────────────────────────────────────────────────────────────
+{ id: 23, name: “House Rum”, category: “Ron”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 4.5, trend: “up”, emoji: “🍹”, distId: 2 },
+{ id: 24, name: “Malibu Pink”, category: “Licores”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 3.2, trend: “up”, emoji: “🌺”, distId: 2 },
+// ── TEQUILA ───────────────────────────────────────────────────────────────
+{ id: 25, name: “House Tequila”, category: “Tequila”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 4.8, trend: “up”, emoji: “🌵”, distId: 2 },
+{ id: 26, name: “Julio Blanco”, category: “Tequila”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 3.5, trend: “up”, emoji: “🌵”, distId: 2 },
+// ── VINO ──────────────────────────────────────────────────────────────────
+{ id: 27, name: “Copper Ridge Cabernet”, category: “Vino”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 3.0, trend: “stable”, emoji: “🍷”, distId: 3 },
+{ id: 28, name: “Chateau Ste Michelle Riesling”, category: “Vino”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 2.0, trend: “stable”, emoji: “🍷”, distId: 3 },
+{ id: 29, name: “Chateau Ste Michelle Cabernet”, category: “Vino”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 2.0, trend: “stable”, emoji: “🍷”, distId: 3 },
+{ id: 30, name: “Pinot Noir”, category: “Vino”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 2.5, trend: “up”, emoji: “🍷”, distId: 3 },
+{ id: 31, name: “Sauvignon Blanc”, category: “Vino”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 1.8, trend: “stable”, emoji: “🍷”, distId: 3 },
+// ── MIXERS / JUGOS ────────────────────────────────────────────────────────
+{ id: 32, name: “Grenadine”, category: “Jugos”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 2.0, trend: “stable”, emoji: “🧃”, distId: 5 },
+{ id: 33, name: “Margarita Mix”, category: “Jugos”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 2.5, trend: “up”, emoji: “🧃”, distId: 5 },
+{ id: 34, name: “Coco Lopez”, category: “Jugos”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 1.5, trend: “stable”, emoji: “🥥”, distId: 5 },
+{ id: 35, name: “Tonic Water”, category: “Sodas”, unit: “case”, stock: 4, backup: 4, par: 4, velocity: 5.0, trend: “up”, emoji: “🥤”, distId: 4 },
+// ── CERVEZA BOTELLA/LATA ──────────────────────────────────────────────────
+{ id: 36, name: “Stella Artois”, category: “Cerveza”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 4.0, trend: “stable”, emoji: “🍺”, distId: 4 },
+{ id: 37, name: “Corona”, category: “Cerveza”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 5.5, trend: “up”, emoji: “🍺”, distId: 4 },
+{ id: 38, name: “Flat Tire”, category: “Cerveza”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 3.5, trend: “up”, emoji: “🍺”, distId: 4 },
+{ id: 39, name: “Truly”, category: “Cerveza”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 4.2, trend: “up”, emoji: “🍺”, distId: 4 },
+{ id: 40, name: “High Noon”, category: “Cerveza”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 4.8, trend: “up”, emoji: “🍺”, distId: 4 },
+{ id: 41, name: “Modelo”, category: “Cerveza”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 5.0, trend: “up”, emoji: “🍺”, distId: 4 },
+{ id: 42, name: “Yuengling”, category: “Cerveza”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 3.8, trend: “stable”, emoji: “🍺”, distId: 4 },
+{ id: 43, name: “Miller”, category: “Cerveza”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 4.0, trend: “stable”, emoji: “🍺”, distId: 4 },
+{ id: 44, name: “Voodoo Ranger”, category: “Cerveza”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 3.5, trend: “up”, emoji: “🍺”, distId: 4 },
+{ id: 45, name: “Modelo Ultra”, category: “Cerveza”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 3.8, trend: “up”, emoji: “🍺”, distId: 4 },
+// ── KEGS ──────────────────────────────────────────────────────────────────
+{ id: 46, name: “Samuel Adams (Keg)”, category: “Cerveza”, unit: “keg”, stock: 1, backup: 1, par: 1, velocity: 2.0, trend: “stable”, emoji: “🛢️”, distId: 4 },
+{ id: 47, name: “Buenaveza (Keg)”, category: “Cerveza”, unit: “keg”, stock: 1, backup: 1, par: 1, velocity: 2.0, trend: “up”, emoji: “🛢️”, distId: 4 },
+{ id: 48, name: “Mostly (Keg)”, category: “Cerveza”, unit: “keg”, stock: 1, backup: 1, par: 1, velocity: 1.8, trend: “stable”, emoji: “🛢️”, distId: 4 },
+{ id: 49, name: “Mango Cart (Keg)”, category: “Cerveza”, unit: “keg”, stock: 1, backup: 1, par: 1, velocity: 2.0, trend: “up”, emoji: “🛢️”, distId: 4 },
+];
+const INIT_DISTS = [
+{ id: 1, name: “Southern Glazer’s”, short: “Southern Glazer’s”, phone: “1-800-815-1400”, email: “orders@southernglazers.com”, rep: “Carlos Mendez”, repPhone: “305-555-0191”, categories: [“Whisky”, “Vodka”, “Gin”, “Cognac”], color: “#c8964e”, notes: “Min $500. Entrega mar y vie.” },
+{ id: 2, name: “RNDC”, short: “RNDC”, phone: “1-888-367-7632”, email: “orders@rndc-usa.com”, rep: “Maria Torres”, repPhone: “786-555-0282”, categories: [“Ron”, “Tequila”, “Licores”], color: “#6e8ec8”, notes: “Min $300. Entrega lun y jue.” },
+{ id: 3, name: “Glazer’s Beverage”, short: “Glazer’s”, phone: “1-800-527-9195”, email: “orders@glazers.com”, rep: “Luis Reyes”, repPhone: “954-555-0393”, categories: [“Cognac”, “Licores”, “Vino”], color: “#a04060”, notes: “Min $200. Entrega mie.” },
+{ id: 4, name: “Gold Coast Dist.”, short: “Gold Coast”, phone: “1-800-446-2653”, email: “orders@goldcoast.com”, rep: “Sandra Cruz”, repPhone: “561-555-0404”, categories: [“Cerveza”, “Sodas”], color: “#e8c84a”, notes: “Min $150. Entrega lun/mie/vie.” },
+{ id: 5, name: “Cideblocks Dist.”, short: “Cideblocks”, phone: “1-800-555-0505”, email: “orders@cideblocks.com”, rep: “Ana Rivera”, repPhone: “407-555-0505”, categories: [“Vino”, “Jugos”, “Sodas”, “Frutas”], color: “#6ec86e”, notes: “Min $100. Entrega mar.” },
+];
+const CATS = [“Todos”, “Whisky”, “Vodka”, “Ron”, “Tequila”, “Gin”, “Cognac”, “Licores”, “Cerveza”, “Vino”, “Jugos”, “Frutas”, “Sodas”, “Desechables”];
+const CAT_CLR = { Whisky: “#c8964e”, Vodka: “#6eb5c8”, Ron: “#c86e6e”, Tequila: “#8ec86e”, Gin: “#8e6ec8”, Cognac: “#c8a86e”, Licores: “#c86ea8”, Cerveza: “#e8c84a”, Vino: “#a04060”, Jugos: “#e8904a”, Frutas: “#6ec86e”, Sodas: “#4ab8e8”, Desechables: “#909090” };
+const CAT_EMO = { Whisky: “🥃”, Vodka: “🍸”, Ron: “🍹”, Tequila: “🌵”, Gin: “🫙”, Cognac: “🍷”, Licores: “🥛”, Cerveza: “🍺”, Vino: “🍷”, Jugos: “🧃”, Frutas: “🍓”, Sodas: “🥤”, Desechables: “🥤” };
+const UNIT_DEF = { Whisky: “750ml”, Vodka: “750ml”, Ron: “750ml”, Tequila: “750ml”, Gin: “750ml”, Cognac: “750ml”, Licores: “750ml”, Cerveza: “355ml lata”, Vino: “750ml botella”, Jugos: “1L caja”, Frutas: “kg”, Sodas: “2L botella”, Desechables: “paquete x50” };
+const PALETTE = [”#c8964e”, “#6e8ec8”, “#a04060”, “#e8c84a”, “#8ec86e”, “#8e6ec8”, “#c86e6e”, “#4ab8e8”, “#44cc88”, “#c86ea8”];
+const ACT = { ADD: “ADD”, DEL: “DEL”, STOCK: “STOCK”, BACKUP: “BACKUP”, PAR: “PAR”, LOGIN: “LOGIN”, LOGOUT: “LOGOUT”, ORDER: “ORDER” };
+const ACT_CLR = { ADD: “#44cc88”, DEL: “#ff4444”, STOCK: “#c8964e”, BACKUP: “#6e8ec8”, PAR: “#8a7a6a”, LOGIN: “#6ec86e”, LOGOUT: “#8a7a6a”, ORDER: “#a04060” };
+const ACT_LBL = { ADD: “Añadió”, DEL: “Eliminó”, STOCK: “Ajustó stock”, BACKUP: “Ajustó backup”, PAR: “Editó mínimo”, LOGIN: “Entró”, LOGOUT: “Salió”, ORDER: “Generó pedido” };
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+const tsNow = () => new Date().toLocaleTimeString(“es-US”, { hour: “2-digit”, minute: “2-digit”, second: “2-digit”, hour12: true });
+const dateNow = () => new Date().toLocaleDateString(“es-US”, { month: “short”, day: “numeric”, year: “numeric” });
+// ── STORAGE ──
+async function shGet(key, fallback) { try {
+const v = localStorage.getItem(key);
+if (v !== null && v !== “”)
+return JSON.parse(v);
+}
+catch (e) { } return fallback; }
+async function shSet(key, value) { try {
+localStorage.setItem(key, JSON.stringify(value));
+}
+catch (e) { } }
+async function shGetSync(key, fallback) { return shGet(key, fallback); }
+function lsGet(key, fallback) { try {
+const v = localStorage.getItem(key);
+if (v !== null && v !== “”)
+return JSON.parse(v);
+}
+catch (e) { } return fallback; }
+function lsSet(key, value) { try {
+localStorage.setItem(key, JSON.stringify(value));
+}
+catch (e) { } }
+async function appendLog(entry) { const logs = await shGet(“lp:logs”, []); logs.unshift(entry); await shSet(“lp:logs”, logs.slice(0, 300)); }
+async function upsertUser(name) { const u = await shGet(“lp:active”, {}); u[name] = { name, lastSeen: Date.now() }; await shSet(“lp:active”, u); }
+async function removeUser(name) { const u = await shGet(“lp:active”, {}); delete u[name]; await shSet(“lp:active”, u); }
+// ── STYLES ────────────────────────────────────────────────────────────────────
+const S = {
+btn: (bg, clr = “#0a0704”) => ({ background: bg, border: “none”, borderRadius: 7, padding: “6px 13px”, color: clr, fontSize: 11, cursor: “pointer”, fontWeight: 600, transition: “opacity .2s” }),
+mini: { background: “rgba(255,255,255,.08)”, border: “1px solid #2a1e12”, borderRadius: 4, color: “#8a7a6a”, cursor: “pointer”, width: 18, height: 18, fontSize: 11, display: “flex”, alignItems: “center”, justifyContent: “center”, padding: 0 },
+miniD: { background: “rgba(255,255,255,.06)”, border: “1px solid #1a2a3a”, borderRadius: 4, color: “#6a8a9a”, cursor: “pointer”, width: 20, height: 20, fontSize: 12, display: “flex”, alignItems: “center”, justifyContent: “center”, padding: 0 },
+input: { background: “rgba(255,255,255,.05)”, border: “1px solid #2a1e12”, borderRadius: 7, padding: “7px 10px”, color: “#f0e6d0”, fontSize: 12, outline: “none” },
+inputD: { background: “rgba(255,255,255,.05)”, border: “1px solid #1a2a3a”, borderRadius: 7, padding: “7px 10px”, color: “#e0eaf0”, fontSize: 12, outline: “none” },
+};
+// ── SESSION SECURITY ─────────────────────────────────────────────────────────
+// Sessions are in-memory only — closing/reloading always requires re-login
+// No session token is ever stored to disk
+// ═══════════════════════════════════════════════════════════════════════════════
+// ROOT
+// ═══════════════════════════════════════════════════════════════════════════════
+function App() {
+// screen always starts at “login” — never persisted
+const [screen, setScreen] = useState(“login”);
+const [user, setUser] = useState(null);
+const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+const [pin, setPin] = useState(null);
+const [adminUser, setAdminUser] = useState(null);
+const [staff, setStaff] = useState(null);
+const [ready, setReady] = useState(false);
+// Clear any stale active users on load (ensures clean state)
+useEffect(() => {
+shSet(“lp:active”, {}).catch(() => { });
+}, []);
+useEffect(() => {
+async function boot() {
+const [pinVal, userVal, staffVal] = await Promise.all([
+shGetSync(“lp:pin”, DEFAULT_PIN),
+shGetSync(“lp:adminuser”, “Admin”),
+shGetSync(“lp:staff”, []),
+]);
+if (!pinVal || pinVal === DEFAULT_PIN)
+await shSet(“lp:pin”, pinVal || DEFAULT_PIN);
+if (!userVal)
+await shSet(“lp:adminuser”, “Admin”);
+setPin(pinVal || DEFAULT_PIN);
+setAdminUser(userVal || “Admin”);
+setStaff(staffVal || []);
+setReady(true);
+}
+boot();
+}, []);
+const changePin = async (np) => { setPin(np); await shSet(“lp:pin”, np); };
+const changeAdminUser = async (nu) => { setAdminUser(nu); await shSet(“lp:adminuser”, nu); };
+const changeStaff = async (ns) => { setStaff(ns); await shSet(“lp:staff”, ns); };
+const handleLogin = (u, a, isSuper) => {
+setUser(u);
+setIsSuperAdmin(!!isSuper);
+setScreen(a ? “admin” : “inv”);
+};
+const handleLogout = async (userName) => {
+if (userName)
+await removeUser(userName);
+// Full reset — forces re-login
+setUser(null);
+setIsSuperAdmin(false);
+setScreen(“login”);
+};
+if (!ready)
+return React.createElement(Splash, null);
+// Gate: if no valid screen state, always show login
+if (screen === “login” || !user)
+return (React.createElement(Login, { pin: pin, adminUser: adminUser, staff: staff, onLogin: handleLogin }));
+if (screen === “inv”)
+return React.createElement(InvApp, { user: user, onLogout: () => handleLogout(user) });
+if (screen === “admin”)
+return (React.createElement(AdminApp, { pin: pin, adminUser: adminUser, staff: staff, isSuperAdmin: isSuperAdmin, onPin: changePin, onAdminUser: changeAdminUser, onStaff: changeStaff, onLogout: () => handleLogout(null) }));
+// Fallback safety — always login
+return React.createElement(Login, { pin: pin, adminUser: adminUser, staff: staff, onLogin: handleLogin });
+}
+function Splash() {
+return React.createElement(“div”, { style: { minHeight: “100vh”, background: “#06080a”, display: “flex”, alignItems: “center”, justifyContent: “center”, color: “#c8964e”, fontFamily: “Georgia”, fontSize: 14, letterSpacing: 2 } }, “\uD83C\uDF7E Cargando LicorPro…”);
+}
+// ═══════════════════════════════════════════════════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════════════════════════════════════════════════
+function Login({ pin, adminUser, staff, onLogin }) {
+const [name, setName] = useState(””);
+const [auName, setAuName] = useState(””);
+const [pw, setPw] = useState(””);
+const [mode, setMode] = useState(“user”);
+const [err, setErr] = useState(””);
+const hasStaff = staff && staff.length > 0;
+const go = async () => {
+setErr(””);
+if (mode === “admin”) {
+if (pw !== pin) {
+setErr(“PIN incorrecto”);
+return;
+}
+const loginName = adminUser || “Admin”;
+const isSuper = loginName.toLowerCase() === SUPER_ADMIN.toLowerCase();
+onLogin(loginName, true, isSuper);
+}
+else {
+const n = name.trim();
+if (!n) {
+setErr(“Escribe tu nombre”);
+return;
+}
+if (!hasStaff) {
+setErr(“Acceso bloqueado. Contacta al administrador.”);
+return;
+}
+const match = staff.find(s => s.toLowerCase() === n.toLowerCase());
+if (!match) {
+setErr(“Nombre no autorizado. Verifica con el administrador.”);
+return;
+}
+await appendLog({ user: match, type: ACT.LOGIN, detail: “Accedió al inventario”, item: “—”, ts: tsNow(), date: dateNow() });
+await upsertUser(match);
+onLogin(match, false, false);
+}
+};
+return (React.createElement(“div”, { style: { minHeight: “100vh”, background: “linear-gradient(135deg,#06080a,#0d1117,#06080a)”, display: “flex”, alignItems: “center”, justifyContent: “center”, fontFamily: “Georgia” } },
+React.createElement(“div”, { style: { width: 340, background: “rgba(255,255,255,.03)”, border: “1px solid #1e2830”, borderRadius: 18, padding: 36, boxShadow: “0 30px 80px rgba(0,0,0,.7)” } },
+React.createElement(“div”, { style: { textAlign: “center”, marginBottom: 28 } },
+React.createElement(“div”, { style: { fontSize: 40, marginBottom: 8 } }, “\uD83C\uDF7E”),
+React.createElement(“div”, { style: { fontSize: 22, letterSpacing: 3, color: “#f0e6d0”, fontWeight: 400 } }, “LicorPro”),
+React.createElement(“div”, { style: { fontSize: 10, letterSpacing: 4, color: “#4a5a6a”, textTransform: “uppercase”, marginTop: 4 } }, “Sistema de Inventario”)),
+React.createElement(“div”, { style: { display: “flex”, background: “rgba(0,0,0,.3)”, borderRadius: 9, padding: 3, marginBottom: 24, border: “1px solid #1e2830” } }, [[“user”, “👤 Empleado”], [“admin”, “🔐 Admin”]].map(([m, l]) => (React.createElement(“button”, { key: m, onClick: () => { setMode(m); setErr(””); }, style: { flex: 1, background: mode === m ? “#c8964e” : “transparent”, border: “none”, borderRadius: 6, padding: “8px”, color: mode === m ? “#0a0704” : “#6a7a8a”, fontSize: 11, cursor: “pointer”, fontWeight: mode === m ? 700 : 400, transition: “all .2s” } }, l)))),
+mode === “user” ? (!hasStaff ? (React.createElement(“div”, { style: { background: “rgba(255,68,68,.07)”, border: “1px solid rgba(255,68,68,.25)”, borderRadius: 10, padding: “20px”, textAlign: “center” } },
+React.createElement(“div”, { style: { fontSize: 28, marginBottom: 8 } }, “\uD83D\uDD12”),
+React.createElement(“div”, { style: { fontSize: 12, color: “#ff9999”, fontWeight: 600, marginBottom: 6 } }, “Acceso restringido”),
+React.createElement(“div”, { style: { fontSize: 10, color: “#7a4a4a”, lineHeight: 1.7 } }, “El administrador a\u00FAn no ha registrado empleados. Contacta al admin.”))) : (React.createElement(“div”, null,
+React.createElement(“div”, { style: { fontSize: 9, color: “#6a7a8a”, letterSpacing: 1, marginBottom: 6, textTransform: “uppercase” } }, “Tu nombre”),
+React.createElement(“input”, { value: name, onChange: e => { setName(e.target.value); setErr(””); }, onKeyDown: e => e.key === “Enter” && go(), placeholder: “Escribe tu nombre…”, style: { …S.input, width: “100%”, boxSizing: “border-box”, fontSize: 13 }, autoFocus: true }),
+React.createElement(“div”, { style: { fontSize: 9, color: “#3a5a4a”, marginTop: 7, display: “flex”, alignItems: “center”, gap: 4 } },
+“\uD83D\uDD12 Acceso verificado \u2014 “,
+staff.length,
+“ empleado”,
+staff.length !== 1 ? “s” : “”,
+“ autorizado”,
+staff.length !== 1 ? “s” : “”)))) : (React.createElement(“div”, null,
+React.createElement(“div”, { style: { fontSize: 9, color: “#6a7a8a”, letterSpacing: 1, marginBottom: 6, textTransform: “uppercase” } }, “PIN de administrador”),
+React.createElement(“input”, { value: pw, onChange: e => { setPw(e.target.value); setErr(””); }, onKeyDown: e => e.key === “Enter” && go(), type: “password”, placeholder: “\u2022\u2022\u2022\u2022”, style: { …S.input, width: “100%”, boxSizing: “border-box”, letterSpacing: 6, fontSize: 22, textAlign: “center” }, autoFocus: true }),
+React.createElement(“div”, { style: { fontSize: 9, color: “#3a4a5a”, marginTop: 7, textAlign: “center” } },
+“Acceso como “,
+React.createElement(“span”, { style: { color: adminUser?.toLowerCase() === SUPER_ADMIN.toLowerCase() ? “#c8964e” : “#4a5a6a”, fontWeight: adminUser?.toLowerCase() === SUPER_ADMIN.toLowerCase() ? 700 : 400 } }, adminUser || “Admin”),
+adminUser?.toLowerCase() === SUPER_ADMIN.toLowerCase() && React.createElement(“span”, { style: { color: “#c8964e” } }, “ \uD83D\uDC51”)))),
+err && (React.createElement(“div”, { style: { color: “#ff8888”, fontSize: 11, marginTop: 12, background: “rgba(255,68,68,.08)”, border: “1px solid rgba(255,68,68,.25)”, borderRadius: 8, padding: “9px 12px”, display: “flex”, alignItems: “center”, gap: 8 } },
+React.createElement(“span”, { style: { fontSize: 15, flexShrink: 0 } }, “\uD83D\uDEAB”),
+React.createElement(“span”, null, err))),
+React.createElement(“button”, { onClick: go, disabled: mode === “user” && !hasStaff, style: { width: “100%”, background: mode === “user” && !hasStaff ? “#1a1a1a” : “#c8964e”, border: “none”, borderRadius: 9, padding: “12px”, color: mode === “user” && !hasStaff ? “#3a3a3a” : “#0a0704”, fontSize: 13, fontWeight: 700, cursor: mode === “user” && !hasStaff ? “not-allowed” : “pointer”, marginTop: 18, transition: “all .2s” } }, mode === “admin” ? “Entrar como Admin” : hasStaff ? “Entrar al Inventario” : “Acceso no disponible”),
+React.createElement(“div”, { style: { textAlign: “center”, marginTop: 12, fontSize: 10, color: “#2a3a4a” } }, mode === “user” ? (hasStaff ? “Solo empleados autorizados” : “Requiere configuración del admin”) : “Panel de control administrativo”))));
+}
+// ═══════════════════════════════════════════════════════════════════════════════
+// INVENTORY APP
+// ═══════════════════════════════════════════════════════════════════════════════
+function InvApp({ user, onLogout }) {
+const [inv, setInv] = useState(null);
+const [dists, setDists] = useState(null);
+const [orders, setOrders] = useState([]);
+const [view, setView] = useState(“inventory”);
+const [filter, setFilter] = useState(“Todos”);
+const [search, setSearch] = useState(””);
+const [showAdd, setShowAdd] = useState(false);
+const [newItem, setNewItem] = useState({ name: “”, category: “Cerveza”, unit: “355ml lata”, stock: 0, backup: 0, par: 2, distId: “” });
+const [showDistM, setShowDistM] = useState(false);
+const [editDistId, setEditDistId] = useState(null);
+const [newDist, setNewDist] = useState({ name: “”, short: “”, phone: “”, email: “”, rep: “”, repPhone: “”, categories: [], color: “#c8964e”, notes: “” });
+const [editParId, setEditParId] = useState(null);
+const [editParV, setEditParV] = useState(””);
+const [activeDist, setActiveDist] = useState(null);
+const [orderQ, setOrderQ] = useState({});
+const [orderNote, setOrderNote] = useState(””);
+const [aiOrderLines, setAiOrderLines] = useState([]);
+const [aiOrderLoading, setAiOrderLoading] = useState(false);
+const [showAI, setShowAI] = useState(false);
+const [aiText, setAiText] = useState(””);
+const [aiLoading, setAiLoading] = useState(false);
+const [notif, setNotif] = useState(null);
+const [timelineItem, setTimelineItem] = useState(null);
+const [manualDate, setManualDate] = useState(””);
+const [manualType, setManualType] = useState(“arrived”);
+const [manualQty, setManualQty] = useState(””);
+const [manualNote, setManualNote] = useState(””);
+const [manualErr, setManualErr] = useState(””);
+const [retireItem, setRetireItem] = useState(null);
+const [retireQty, setRetireQty] = useState(“1”);
+const [retireReason, setRetireReason] = useState(””);
+const hbRef = useRef(null);
+useEffect(() => {
+async function boot() {
+const [invData, distData, ordData] = await Promise.all([
+shGetSync(“lp:inventory”, null),
+shGetSync(“lp:distributors”, null),
+shGet(“lp:orders”, []),
+]);
+const inv_ = invData || INIT_INV;
+const dist_ = distData || INIT_DISTS;
+if (!invData)
+await shSet(“lp:inventory”, inv_);
+if (!distData)
+await shSet(“lp:distributors”, dist_);
+setInv(inv_);
+setDists(dist_);
+setOrders(ordData);
+}
+boot();
+hbRef.current = setInterval(() => upsertUser(user), 15000);
+return () => clearInterval(hbRef.current);
+}, [user]);
+const toast = (msg, type = “ok”) => { setNotif({ msg, type }); setTimeout(() => setNotif(null), 3000); };
+const log = useCallback(async (type, item, detail) => { await appendLog({ user, type, detail, item: item || “—”, ts: tsNow(), date: dateNow() }); }, [user]);
+const saveInv = async (next) => { setInv(next); await shSet(“lp:inventory”, next); };
+const saveDists = async (next) => { setDists(next); await shSet(“lp:distributors”, next); };
+const saveOrders = async (next) => { setOrders(next); await shSet(“lp:orders”, next); };
+const adjStock = async (id, d) => {
+const it = inv.find(i => i.id === id);
+const newStock = Math.max(0, it.stock + d);
+let history = it.history ? […it.history] : [];
+let updates = { stock: newStock };
+// Stock hit 0 → record depletion
+if (newStock === 0 && it.stock > 0) {
+const ev = { type: “finished”, date: dateNow(), ts: tsNow(), user, stock: 0 };
+history.push(ev);
+updates.lastFinished = dateNow();
+updates.history = history;
+toast(`⚠️ ${it.name} se agotó — registrado`, “err”);
+}
+// Coming from 0 → record arrival
+if (it.stock === 0 && newStock > 0) {
+const ev = { type: “arrived”, date: dateNow(), ts: tsNow(), user, stock: newStock };
+history.push(ev);
+updates.lastArrived = dateNow();
+updates.history = history;
+toast(`📦 ${it.name} llegó — registrado`);
+}
+// Recalculate velocity from history if we have cycles
+const cycles = calcCycles(history);
+if (cycles.avgDays > 0)
+updates.velocity = parseFloat((it.par / cycles.avgDays * 7).toFixed(1));
+const nx = inv.map(i => i.id === id ? { …i, …updates } : i);
+await saveInv(nx);
+await log(ACT.STOCK, it.name, `${d > 0 ? "+" : ""}${d} → stock:${newStock}`);
+};
+const markArrived = async (id) => {
+const it = inv.find(i => i.id === id);
+const history = it.history ? […it.history] : [];
+history.push({ type: “arrived”, date: dateNow(), ts: tsNow(), user, stock: it.stock });
+await saveInv(inv.map(i => i.id === id ? { …i, history, lastArrived: dateNow() } : i));
+await log(ACT.STOCK, it.name, `Llegada registrada — stock:${it.stock}`);
+toast(`📦 Llegada de ${it.name} registrada`);
+};
+const markFinished = async (id) => {
+const it = inv.find(i => i.id === id);
+const history = it.history ? […it.history] : [];
+history.push({ type: “finished”, date: dateNow(), ts: tsNow(), user, stock: 0 });
+await saveInv(inv.map(i => i.id === id ? { …i, history, lastFinished: dateNow(), stock: 0 } : i));
+await log(ACT.STOCK, it.name, `Agotado registrado`);
+toast(`⚠️ ${it.name} marcado como agotado`, “err”);
+};
+const markRetired = async (id, qty = 1, reason = “”) => {
+const it = inv.find(i => i.id === id);
+const newStock = Math.max(0, it.stock - qty);
+const history = it.history ? […it.history] : [];
+history.push({ type: “retired”, date: dateNow(), ts: tsNow(), user, qty, reason: reason || undefined, stock: newStock });
+await saveInv(inv.map(i => i.id === id ? { …i, history, lastRetired: dateNow(), stock: newStock } : i));
+await log(ACT.STOCK, it.name, `Retirado: ${qty} unidad${qty !== 1 ? "es" : ""} → stock:${newStock}${reason ? " (" + reason + ")" : ""}`);
+toast(`🗑️ ${it.name}: ${qty} unidad${qty !== 1 ? "es" : ""} retirada${qty !== 1 ? "s" : ""}`, “err”);
+};
+const calcCycles = (history) => {
+if (!history || history.length < 2)
+return { avgDays: 0, cycles: 0 };
+const arrivals = history.filter(h => h.type === “arrived”);
+const finishes = history.filter(h => h.type === “finished”);
+if (arrivals.length === 0 || finishes.length === 0)
+return { avgDays: 0, cycles: 0 };
+const pairs = [];
+arrivals.forEach(a => {
+const finish = finishes.find(f => new Date(f.date + “,” + f.ts) > new Date(a.date + “,” + a.ts));
+if (finish) {
+const days = Math.max(1, Math.round((new Date(finish.date) - new Date(a.date)) / 86400000));
+pairs.push(days);
+}
+});
+if (pairs.length === 0)
+return { avgDays: 0, cycles: 0 };
+const avgDays = Math.round(pairs.reduce((a, b) => a + b, 0) / pairs.length);
+return { avgDays, cycles: pairs.length };
+};
+const addManualEntry = async () => {
+setManualErr(””);
+if (!manualDate) {
+setManualErr(“Selecciona una fecha”);
+return;
+}
+const it = inv.find(i => i.id === timelineItem.id);
+const history = it.history ? […it.history] : [];
+const fmtDate = new Date(manualDate + “T12:00:00”).toLocaleDateString(“es-US”, { month: “short”, day: “numeric”, year: “numeric” });
+const ev = {
+type: manualType,
+date: fmtDate,
+ts: “manual”,
+user,
+stock: manualType === “arrived” ? (parseInt(manualQty) || it.stock) : manualType === “retired” ? Math.max(0, it.stock - (parseInt(manualQty) || 1)) : 0,
+qty: (manualType === “arrived” || manualType === “retired”) ? (parseInt(manualQty) || 1) : undefined,
+note: manualNote.trim() || undefined,
+manual: true,
+};
+history.push(ev);
+history.sort((a, b) => new Date(a.date) - new Date(b.date));
+const updates = { history };
+if (manualType === “arrived”) {
+updates.lastArrived = fmtDate;
+}
+if (manualType === “finished”) {
+updates.lastFinished = fmtDate;
+}
+if (manualType === “retired”) {
+updates.lastRetired = fmtDate;
+}
+const newInv = inv.map(i => i.id === it.id ? { …i, …updates } : i);
+await saveInv(newInv);
+await log(ACT.STOCK, it.name, `Fecha manual: ${manualType === "arrived" ? "Llegada" : manualType === "retired" ? "Retirado" : "Agotado"} el ${fmtDate}`);
+setTimelineItem(newInv.find(i => i.id === it.id));
+setManualDate(””);
+setManualQty(””);
+setManualNote(””);
+setManualType(“arrived”);
+toast(`Fecha registrada para ${it.name}`);
+};
+const adjBackup = async (id, d) => { const it = inv.find(i => i.id === id); const nx = inv.map(i => i.id === id ? { …i, backup: Math.max(0, i.backup + d) } : i); await saveInv(nx); await log(ACT.BACKUP, it.name, `${d > 0 ? "+" : ""}${d} → backup:${nx.find(i => i.id === id).backup}`); };
+const delItem = async (id) => { const it = inv.find(i => i.id === id); await saveInv(inv.filter(i => i.id !== id)); await log(ACT.DEL, it.name, “Eliminó de inventario”); toast(“Producto eliminado”, “err”); };
+const commitPar = async (id) => {
+const v = parseInt(editParV, 10);
+if (!isNaN(v) && v >= 0) {
+const it = inv.find(i => i.id === id);
+await saveInv(inv.map(i => i.id === id ? { …i, par: v } : i));
+await log(ACT.PAR, it.name, `Mínimo → ${v}`);
+toast(“Mínimo actualizado”);
+}
+setEditParId(null);
+};
+const addItem = async () => {
+if (!newItem.name.trim())
+return;
+const it = { …newItem, id: Date.now(), velocity: parseFloat((Math.random() * 4 + 1).toFixed(1)), trend: “stable”, emoji: CAT_EMO[newItem.category] || “🍾” };
+await saveInv([…inv, it]);
+await log(ACT.ADD, it.name, `Stock:${it.stock}, Backup:${it.backup}`);
+setNewItem({ name: “”, category: “Cerveza”, unit: “355ml lata”, stock: 0, backup: 0, par: 2, distId: “” });
+setShowAdd(false);
+toast(`${it.name} añadido`);
+};
+const saveDist = async () => {
+if (!newDist.name.trim())
+return;
+const nx = editDistId ? dists.map(d => d.id === editDistId ? { …newDist, id: editDistId } : d) : […dists, { …newDist, id: Date.now() }];
+await saveDists(nx);
+setShowDistM(false);
+toast(editDistId ? “Distribuidora actualizada” : “Distribuidora añadida”);
+};
+const delDist = async (id) => { await saveDists(dists.filter(d => d.id !== id)); toast(“Distribuidora eliminada”, “err”); };
+const aiOrder = async () => {
+if (!activeDist)
+return;
+const d = dists.find(d => d.id === activeDist);
+const di = inv.filter(i => i.distId === activeDist);
+setAiOrderLoading(true);
+setAiOrderLines([]);
+const summary = di.map(i => `id=${i.id} ${i.name}:stock=${i.stock},backup=${i.backup},min=${i.par},vel=${i.velocity},trend=${i.trend}`).join(”\n”);
+try {
+const res = await fetch(“https://api.anthropic.com/v1/messages”, { method: “POST”, headers: { “Content-Type”: “application/json” }, body: JSON.stringify({ model: “claude-sonnet-4-20250514”, max_tokens: 700, system: `Responde SOLO con JSON array sin backticks. Formato:[{"id":numId,"qty":cantidad,"reason":"razon corta"}]. Solo productos que necesitan reabastecimiento.`, messages: [{ role: “user”, content: `Dist:${d.name}\n${summary}\nGenera pedido optimo para proxima semana.` }] }) });
+const data = await res.json();
+const parsed = JSON.parse((data.content?.[0]?.text || “[]”).replace(/`json|`/g, “”).trim());
+const qtys = {};
+parsed.forEach(p => { qtys[p.id] = p.qty; });
+setOrderQ(qtys);
+setAiOrderLines(parsed.map(p => ({ name: inv.find(i => i.id === p.id)?.name || `ID${p.id}`, qty: p.qty, reason: p.reason })));
+toast(“Pedido IA generado”);
+}
+catch {
+toast(“Error al generar pedido”, “err”);
+}
+setAiOrderLoading(false);
+};
+const saveOrder = async () => {
+const d = dists.find(d => d.id === activeDist);
+const di = inv.filter(i => i.distId === activeDist);
+const lines = di.filter(i => (orderQ[i.id] || 0) > 0).map(i => ({ …i, orderQty: orderQ[i.id] }));
+if (!lines.length) {
+toast(“Agrega cantidades primero”, “err”);
+return;
+}
+const o = { id: Date.now(), distId: activeDist, distName: d?.name, distColor: d?.color, date: dateNow(), items: lines, note: orderNote, total: lines.reduce((a, b) => a + b.orderQty, 0) };
+const nx = [o, …orders];
+await saveOrders(nx);
+await log(ACT.ORDER, d?.name, `Pedido ${o.total}u (${lines.length} productos)`);
+setOrderQ({});
+setOrderNote(””);
+setAiOrderLines([]);
+toast(`Pedido a ${d?.name} guardado`);
+};
+const getAI = async () => {
+setAiLoading(true);
+setShowAI(true);
+setAiText(””);
+const s = inv.map(i => {
+const cyc = calcCycles(i.history);
+return `${i.name}(${i.category}):stock=${i.stock},backup=${i.backup},par=${i.par},vel=${i.velocity}${cyc.avgDays > 0 ? `,ciclo_real=${cyc.avgDays}d,ciclos=${cyc.cycles}`: ""}${i.lastArrived ?`,ultima_llegada=${i.lastArrived}`: ""}${i.lastFinished ?`,ultimo_agotado=${i.lastFinished}` : ""}`;
+}).join(”\n”);
+try {
+const res = await fetch(“https://api.anthropic.com/v1/messages”, { method: “POST”, headers: { “Content-Type”: “application/json” }, body: JSON.stringify({ model: “claude-sonnet-4-20250514”, max_tokens: 900, system: `Eres agente de ventas experto. Responde en espanol, conciso, emojis, ### para titulos. Cuando hay datos de ciclo_real usa esos para calcular cuando se va a acabar cada producto y cuando hay que pedirlo.`, messages: [{ role: “user”, content: `Analiza inventario con datos de ciclos reales:\n${s}` }] }) });
+const data = await res.json();
+setAiText(data.content?.[0]?.text || “”);
+}
+catch {
+setAiText(“Error de conexion.”);
+}
+setAiLoading(false);
+};
+const logout = async () => { await log(ACT.LOGOUT, “—”, “Cerro sesion”); await removeUser(user); onLogout(); };
+if (!inv || !dists)
+return React.createElement(Splash, null);
+const filt = inv.filter(i => (filter === “Todos” || i.category === filter) && (i.name.toLowerCase().includes(search.toLowerCase()) || i.category.toLowerCase().includes(search.toLowerCase())));
+const tStock = inv.reduce((a, b) => a + b.stock, 0);
+const tBackup = inv.reduce((a, b) => a + b.backup, 0);
+const nLow = inv.filter(i => i.stock <= i.par * 2).length;
+const crits = inv.filter(i => i.stock <= i.par);
+const distInv = activeDist ? inv.filter(i => i.distId === activeDist) : [];
+const oTotal = Object.values(orderQ).reduce((a, b) => a + (b || 0), 0);
+const stStatus = it => it.stock <= it.par ? { c: “#ff4444”, l: “CRITICO” } : it.stock <= it.par * 2 ? { c: “#ffaa00”, l: “BAJO” } : { c: “#44cc88”, l: “OK” };
+return (React.createElement(“div”, { style: { minHeight: “100vh”, background: “linear-gradient(135deg,#0a0704,#150f08,#0a0704)”, fontFamily: “Georgia”, color: “#f0e6d0”, paddingBottom: 60 } },
+notif && React.createElement(“div”, { style: { position: “fixed”, top: 16, right: 16, zIndex: 9999, background: notif.type === “err” ? “#3a1010” : “#103a20”, border: `1px solid ${notif.type === "err" ? "#ff4444" : "#44cc88"}`, color: notif.type === “err” ? “#ff8888” : “#88ffbb”, padding: “9px 16px”, borderRadius: 8, fontSize: 11, boxShadow: “0 4px 20px rgba(0,0,0,.5)”, animation: “fadeIn .25s” } }, notif.msg),
+React.createElement(“div”, { style: { background: “linear-gradient(180deg,#1a0f06,transparent)”, borderBottom: “1px solid #2a1e12”, padding: “16px 22px”, display: “flex”, alignItems: “center”, justifyContent: “space-between”, flexWrap: “wrap”, gap: 10 } },
+React.createElement(“div”, { style: { display: “flex”, alignItems: “center”, gap: 10 } },
+React.createElement(“div”, null,
+React.createElement(“div”, { style: { fontSize: 9, letterSpacing: 4, color: “#c8964e”, textTransform: “uppercase” } }, “LicorPro”),
+React.createElement(“div”, { style: { fontSize: 18, fontWeight: 400, letterSpacing: 2 } }, “\uD83C\uDF7E Inventario”)),
+React.createElement(“div”, { style: { background: “rgba(68,204,136,.12)”, border: “1px solid rgba(68,204,136,.3)”, borderRadius: 20, padding: “3px 10px”, fontSize: 10, color: “#44cc88” } },
+“\uD83D\uDC64 “,
+user)),
+React.createElement(“div”, { style: { display: “flex”, gap: 4, background: “rgba(0,0,0,.3)”, borderRadius: 9, padding: 3, border: “1px solid #2a1e12” } }, [[“inventory”, “📦 Inventario”], [“distributors”, “🏢 Distribuidoras”], [“orders”, “📋 Pedidos”]].map(([v, l]) => (React.createElement(“button”, { key: v, onClick: () => setView(v), style: { background: view === v ? “#c8964e” : “transparent”, border: “none”, borderRadius: 6, padding: “5px 11px”, color: view === v ? “#0a0704” : “#8a7a6a”, fontSize: 10, cursor: “pointer”, fontWeight: view === v ? 700 : 400, whiteSpace: “nowrap” } }, l)))),
+React.createElement(“div”, { style: { display: “flex”, gap: 6 } },
+view === “inventory” && React.createElement(React.Fragment, null,
+React.createElement(“button”, { onClick: () => setShowAdd(true), style: S.btn(”#c8964e”) }, “+ Producto”),
+React.createElement(“button”, { onClick: getAI, style: S.btn(”#6e8ec8”) }, “\uD83E\uDD16 IA”)),
+view === “distributors” && React.createElement(“button”, { onClick: () => { setEditDistId(null); setNewDist({ name: “”, short: “”, phone: “”, email: “”, rep: “”, repPhone: “”, categories: [], color: “#c8964e”, notes: “” }); setShowDistM(true); }, style: S.btn(”#c8964e”) }, “+ Distribuidora”),
+React.createElement(“button”, { onClick: logout, style: S.btn(”#2a1e12”, “#8a7a6a”) }, “Salir”))),
+view === “inventory” && (React.createElement(“div”, null,
+React.createElement(“div”, { style: { display: “flex”, gap: 9, padding: “14px 22px”, flexWrap: “wrap” } }, [{ l: “Stock Activo”, v: tStock, c: “#44cc88” }, { l: “Backup”, v: tBackup, c: “#c8964e” }, { l: “Productos”, v: inv.length, c: “#6e8ec8” }, { l: “Bajo Mínimo”, v: nLow, c: nLow > 0 ? “#ff4444” : “#44cc88” }].map((s, i) => (React.createElement(“div”, { key: i, style: { flex: “1 1 110px”, background: “rgba(255,255,255,.03)”, border: “1px solid #2a1e12”, borderRadius: 9, padding: “11px 14px” } },
+React.createElement(“div”, { style: { fontSize: 8, color: “#8a7a6a”, letterSpacing: 1, textTransform: “uppercase” } }, s.l),
+React.createElement(“div”, { style: { fontSize: 24, fontWeight: 700, color: s.c, lineHeight: 1.15, marginTop: 2 } }, s.v))))),
+crits.length > 0 && React.createElement(“div”, { style: { margin: “0 22px 8px”, background: “rgba(255,68,68,.07)”, border: “1px solid rgba(255,68,68,.3)”, borderRadius: 8, padding: “5px 12px”, display: “flex”, alignItems: “center”, gap: 8, flexWrap: “wrap” } },
+React.createElement(“span”, { style: { fontSize: 9, color: “#ff6666”, fontWeight: 700, whiteSpace: “nowrap” } },
+“\u26A0\uFE0F CR\u00CDTICO (”,
+crits.length,
+“)”),
+React.createElement(“div”, { style: { display: “flex”, gap: 4, flexWrap: “wrap” } }, crits.map(i => React.createElement(“span”, { key: i.id, style: { fontSize: 9, color: “#ffaaaa” } },
+i.emoji,
+“ “,
+i.name,
+“: “,
+i.stock)).reduce((a, b) => […a, React.createElement(“span”, { key: b.key + “s”, style: { color: “#3a1a1a” } }, “\u00B7”), b], []).slice(1))),
+React.createElement(“div”, { style: { padding: “0 22px 10px”, display: “flex”, gap: 8, flexWrap: “wrap”, alignItems: “center” } },
+React.createElement(“input”, { value: search, onChange: e => setSearch(e.target.value), placeholder: “Buscar…”, style: { …S.input, width: 150, padding: “5px 10px”, fontSize: 11 } }),
+React.createElement(“div”, { style: { display: “flex”, gap: 3, flexWrap: “wrap” } }, CATS.map(c => React.createElement(“button”, { key: c, onClick: () => setFilter(c), style: { background: filter === c ? (CAT_CLR[c] || “#c8964e”) : “rgba(255,255,255,.04)”, border: `1px solid ${filter === c ? "transparent" : "#2a1e12"}`, borderRadius: 20, padding: “2px 8px”, color: filter === c ? “#0a0704” : “#8a7a6a”, fontSize: 8, cursor: “pointer”, fontWeight: filter === c ? 700 : 400, whiteSpace: “nowrap” } },
+c !== “Todos” && CAT_EMO[c],
+“ “,
+c)))),
+React.createElement(“div”, { style: { padding: “0 22px” } },
+React.createElement(“div”, { style: { background: “rgba(255,255,255,.02)”, border: “1px solid #2a1e12”, borderRadius: 11, overflow: “hidden” } },
+React.createElement(“div”, { style: { display: “grid”, gridTemplateColumns: “2fr 1fr 1fr 1fr 1fr 1fr 1fr”, background: “#120c06”, padding: “7px 13px”, fontSize: 7, color: “#6a5a4a”, letterSpacing: 1.5, textTransform: “uppercase”, borderBottom: “1px solid #2a1e12” } },
+React.createElement(“div”, null, “Producto”),
+React.createElement(“div”, { style: { textAlign: “center” } }, “Stock”),
+React.createElement(“div”, { style: { textAlign: “center” } }, “Backup”),
+React.createElement(“div”,
