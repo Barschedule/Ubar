@@ -18,7 +18,7 @@ s.onload=function(){
   s2.src='https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js';
   s2.onload=function(){
     L('✅ ReactDOM OK','#44cc88');
-    fetch('https://cdn.jsdelivr.net/gh/Barschedule/Ubar@main/App.js')
+    fetch('https://cdn.jsdelivr.net/gh/Barschedule/Ubar@master/App.js')
       .then(function(r){L('Fetch: '+r.status,r.ok?'#44cc88':'#ff6666');return r.text();})
       .then(function(c){L('App.js: '+c.length+' chars','#44cc88');L('Inicio: '+c.slice(0,80));})
       .catch(function(e){L('❌ '+e.message,'#ff6666');});
