@@ -1417,3 +1417,4 @@ return (React.createElement("div", { style: { minHeight: "100vh", background: "l
 ``` 
 
 }
+window.App = App;
