@@ -1,70 +1,31 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <title>LicorPro</title>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    html,body{height:100%;background:#06080a}
-    body{font-family:Georgia,serif}
-    #root{min-height:100vh}
-    #sp{position:fixed;inset:0;background:#06080a;display:flex;flex-direction:column;
-        align-items:center;justify-content:center;gap:18px;z-index:9999;transition:opacity .4s}
-    .sp-e{font-size:52px;animation:bob 2s ease-in-out infinite}
-    @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-    .sp-t{font-size:11px;letter-spacing:6px;color:#c8964e;text-transform:uppercase}
-    .sp-r{width:32px;height:32px;border:3px solid #1a1208;border-top-color:#c8964e;border-radius:50%;animation:spin .8s linear infinite}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    #sp-err{color:#ff6666;font-size:11px;text-align:center;padding:0 24px;line-height:1.8;display:none;max-width:300px}
-  </style>
-</head>
-<body>
-<div id="sp"><div class="sp-e">🍾</div><div class="sp-t">LicorPro</div><div class="sp-r" id="sp-ring"></div><div id="sp-err"></div></div>
-<div id="root"></div>
+<html><head><meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>LicorPro Debug</title>
+<style>body{background:#06080a;color:#f0e6d0;font-family:Georgia;padding:20px;}</style>
+</head><body>
+<h2>🍾 LicorPro — Diagnóstico</h2>
+<div id="log" style="font-size:11px;margin-top:20px;line-height:2"></div>
 <script>
-(function(){try{
-  var h=window.location.hash.slice(1);
-  if(h&&h.startsWith('sync=')){
-    var d=JSON.parse(decodeURIComponent(escape(atob(h.slice(5)))));
-    if(d.pin)   localStorage.setItem('lp:pin',d.pin);
-    if(d.au)    localStorage.setItem('lp:adminuser',d.au);
-    if(d.staff) localStorage.setItem('lp:staff',d.staff);
-    if(d.inv&&d.inv!=='null')   localStorage.setItem('lp:inventory',d.inv);
-    if(d.dists&&d.dists!=='null') localStorage.setItem('lp:distributors',d.dists);
-    history.replaceState(null,'',window.location.pathname);
-  }
-}catch(e){}})();
-function spErr(msg){
-  document.getElementById('sp-ring').style.display='none';
-  var e=document.getElementById('sp-err');
-  e.style.display='block';
-  e.innerHTML='⚠️ '+msg+'<br><br><button onclick="location.reload()" style="margin-top:8px;background:#c8964e;border:none;border-radius:6px;padding:8px 18px;color:#000;cursor:pointer;font-size:12px">Recargar</button>';
-s.src='https://cdn.jsdelivr.net/gh/Barschedule/Ubar@main/App.js';
-function loadSrc(src,ok,err){var s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=err;document.head.appendChild(s);}
-function boot(){try{
-  var useState=React.useState,useEffect=React.useEffect,useRef=React.useRef,useCallback=React.useCallback;
-  var s=document.createElement('script');
-  s.src='https://cdn.jsdelivr.net/gh/Barschedule/Ubar@main/App.js';
-  s.onload=function(){
-    var root=ReactDOM.createRoot(document.getElementById('root'));
-    root.render(React.createElement(App));
-    var sp=document.getElementById('sp');sp.style.opacity='0';
-    setTimeout(function(){sp.style.display='none';},400);
+var log=document.getElementById('log');
+function L(msg,color){log.innerHTML+='<div style="color:'+(color||'#c8964e')+'">'+msg+'</div>';}
+L('Cargando React...');
+var s=document.createElement('script');
+s.src='https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js';
+s.onload=function(){
+  L('✅ React OK','#44cc88');
+  var s2=document.createElement('script');
+  s2.src='https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js';
+  s2.onload=function(){
+    L('✅ ReactDOM OK','#44cc88');
+    fetch('https://cdn.jsdelivr.net/gh/Barschedule/Ubar@main/App.js')
+      .then(function(r){L('Fetch: '+r.status,r.ok?'#44cc88':'#ff6666');return r.text();})
+      .then(function(c){L('App.js: '+c.length+' chars','#44cc88');L('Inicio: '+c.slice(0,80));})
+      .catch(function(e){L('❌ '+e.message,'#ff6666');});
   };
-  s.onerror=function(){spErr('No se pudo cargar la app.');};
-  document.head.appendChild(s);
-}catch(err){spErr('Error: '+err.message);}}
-loadSrc('https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js',
-  function(){loadSrc('https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js',boot,
-    function(){loadSrc('https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js',boot,
-      function(){spErr('Sin conexión.');});});},
-  function(){loadSrc('https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js',
-    function(){loadSrc('https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js',boot,
-      function(){spErr('Sin conexión.');});},
-    function(){spErr('Sin conexión a internet.');});});
-</script>
-</body>
-</html>
-
+  s2.onerror=function(){L('❌ ReactDOM falló','#ff6666');};
+  document.head.appendChild(s2);
+};
+s.onerror=function(){L('❌ React falló','#ff6666');};
+document.head.appendChild(s);
+</script></body></html>
