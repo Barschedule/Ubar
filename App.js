@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>LicorPro Debug</title>
+<style>body{background:#06080a;color:#f0e6d0;font-family:Georgia;padding:20px;}</style>
+</head><body>
+<h2>🍾 LicorPro — Diagnóstico</h2>
+<div id="log" style="font-size:11px;margin-top:20px;line-height:2"></div>
+<script>
+var log=document.getElementById('log');
+function L(msg,color){log.innerHTML+='<div style="color:'+(color||'#c8964e')+'">'+msg+'</div>';}
+L('Cargando React...');
+var s=document.createElement('script');
+s.src='https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js';
+s.onload=function(){
+  L('✅ React OK','#44cc88');
+  var s2=document.createElement('script');
+  s2.src='https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js';
+  s2.onload=function(){
+    L('✅ ReactDOM OK','#44cc88');
+    fetch('https://cdn.jsdelivr.net/gh/Barschedule/Ubar@main/App.js')
+      .then(function(r){L('Fetch: '+r.status,r.ok?'#44cc88':'#ff6666');return r.text();})
+      .then(function(c){L('App.js: '+c.length+' chars','#44cc88');L('Inicio: '+c.slice(0,80));})
+      .catch(function(e){L('❌ '+e.message,'#ff6666');});
+  };
+  s2.onerror=function(){L('❌ ReactDOM falló','#ff6666');};
+  document.head.appendChild(s2);
+};
+s.onerror=function(){L('❌ React falló','#ff6666');};
+document.head.appendChild(s);
+</script></body></html>
