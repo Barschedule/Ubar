@@ -31,8 +31,8 @@
     if(d.pin)   localStorage.setItem('lp:pin',d.pin);
     if(d.au)    localStorage.setItem('lp:adminuser',d.au);
     if(d.staff) localStorage.setItem('lp:staff',d.staff);
-    if(d.inv&&d.inv!=='null')   localStorage.setItem('lp:inventory',d.inv);
-    if(d.dists&&d.dists!=='null') localStorage.setItem('lp:distributors',d.dists);
+    if(d.inv&&d.inv!='null')   localStorage.setItem('lp:inventory',d.inv);
+    if(d.dists&&d.dists!='null') localStorage.setItem('lp:distributors',d.dists);
     history.replaceState(null,'',window.location.pathname);
   }
 }catch(e){}})();
@@ -40,27 +40,28 @@ function spErr(msg){
   document.getElementById('sp-ring').style.display='none';
   var e=document.getElementById('sp-err');
   e.style.display='block';
-  e.innerHTML='⚠️ '+msg+'<br><br><button onclick="location.reload()" style="margin-top:8px;background:#c8964e;border:none;border-radius:6px;padding:8px 18px;color:#000;cursor:pointer;font-size:12px;font-family:Georgia,serif">Recargar</button>';
+  e.innerHTML='ERROR: '+msg+'<br><br><button onclick="location.reload()" style="margin-top:8px;background:#c8964e;border:none;border-radius:6px;padding:8px 18px;color:#000;cursor:pointer;font-size:12px;font-family:Georgia,serif">Recargar</button>';
 }
 function loadSrc(src,ok,err){var s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=err;document.head.appendChild(s);}
+function injectAndRun(code){
+  var boot='(function(){var useState=React.useState,useEffect=React.useEffect,useRef=React.useRef,useCallback=React.useCallback;'+code+'var root=ReactDOM.createRoot(document.getElementById("root"));root.render(React.createElement(App));var sp=document.getElementById("sp");sp.style.opacity="0";setTimeout(function(){sp.style.display="none";},400);})();';
+  var blob=new Blob([boot],{type:'application/javascript'});
+  var url=URL.createObjectURL(blob);
+  var s=document.createElement('script');
+  s.src=url;
+  s.onerror=function(){spErr('Error ejecutando app');};
+  document.head.appendChild(s);
+}
 function loadApp(){
-  fetch('https://cdn.jsdelivr.net/gh/Barschedule/Ubar@master/App.js'?v=2)
+  fetch('https://cdn.jsdelivr.net/gh/Barschedule/Ubar@master/App.js?v=3')
     .then(function(r){return r.text();})
-    .then(function(code){
-      var fn=new Function('React','ReactDOM','useState','useEffect','useRef','useCallback',code+'\nreturn App;');
-      var App=fn(React,ReactDOM,React.useState,React.useEffect,React.useRef,React.useCallback);
-      var root=ReactDOM.createRoot(document.getElementById('root'));
-      root.render(React.createElement(App));
-      var sp=document.getElementById('sp');
-      sp.style.opacity='0';
-      setTimeout(function(){sp.style.display='none';},400);
-    })
+    .then(function(code){injectAndRun(code);})
     .catch(function(e){spErr('Error: '+e.message);});
 }
 loadSrc('https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js',
   function(){loadSrc('https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js',
-    loadApp,function(){spErr('Sin conexión.');});},
-  function(){spErr('Sin conexión a internet.');});
+    loadApp,function(){spErr('Sin conexion.');});},
+  function(){spErr('Sin conexion a internet.');});
 </script>
 </body>
 </html>
