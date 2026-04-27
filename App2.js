@@ -1,7 +1,106 @@
 “use strict”;
 // ── CONSTANTS ─────────────────────────────────────────────────────────────────
 const DEFAULT_PIN = “1234”;
-
+const POLL_MS = 4000;
+const SUPER_ADMIN = “Fabinho”; // Solo este usuario puede cambiar credenciales y empleados
+const INIT_INV = [
+// ── WHISKY / SCOTCH / BOURBON ─────────────────────────────────────────────
+{ id: 1, name: “Jameson”, category: “Whisky”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 3.5, trend: “up”, emoji: “🥃”, distId: 1 },
+{ id: 2, name: “Jim Beam”, category: “Whisky”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 3.2, trend: “stable”, emoji: “🥃”, distId: 1 },
+{ id: 3, name: “Monkey’s Shoulder”, category: “Whisky”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 2.8, trend: “up”, emoji: “🥃”, distId: 1 },
+{ id: 4, name: “Wild Turkey”, category: “Whisky”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 2.5, trend: “stable”, emoji: “🥃”, distId: 1 },
+{ id: 5, name: “Grant’s Triple Wood”, category: “Whisky”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 2.2, trend: “stable”, emoji: “🥃”, distId: 1 },
+{ id: 6, name: “Blended Single Malt Scotch”, category: “Whisky”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 2.0, trend: “stable”, emoji: “🥃”, distId: 1 },
+{ id: 7, name: “Crown Royal Woods”, category: “Whisky”, unit: “750ml”, stock: 1, backup: 1, par: 1, velocity: 1.8, trend: “stable”, emoji: “🥃”, distId: 1 },
+{ id: 8, name: “Crown Royal Apple”, category: “Whisky”, unit: “750ml”, stock: 1, backup: 1, par: 1, velocity: 2.0, trend: “up”, emoji: “🥃”, distId: 1 },
+{ id: 9, name: “Crown Royal Beach”, category: “Whisky”, unit: “750ml”, stock: 1, backup: 1, par: 1, velocity: 1.6, trend: “up”, emoji: “🥃”, distId: 1 },
+{ id: 10, name: “Makers Mark”, category: “Whisky”, unit: “750ml”, stock: 3, backup: 3, par: 3, velocity: 3.8, trend: “up”, emoji: “🥃”, distId: 1 },
+{ id: 11, name: “Basil Hayden”, category: “Whisky”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 2.3, trend: “up”, emoji: “🥃”, distId: 1 },
+{ id: 12, name: “Fireball”, category: “Licores”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 4.5, trend: “up”, emoji: “🔥”, distId: 1 },
+// ── COGNAC ────────────────────────────────────────────────────────────────
+{ id: 13, name: “Hennessy”, category: “Cognac”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 3.0, trend: “up”, emoji: “🍷”, distId: 1 },
+{ id: 14, name: “Martell Cordon Bleu”, category: “Cognac”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 1.8, trend: “stable”, emoji: “🍷”, distId: 1 },
+// ── VODKA ─────────────────────────────────────────────────────────────────
+{ id: 15, name: “House Vodka”, category: “Vodka”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 5.0, trend: “up”, emoji: “🍸”, distId: 1 },
+{ id: 16, name: “Grey Goose”, category: “Vodka”, unit: “750ml”, stock: 1, backup: 1, par: 1, velocity: 3.5, trend: “up”, emoji: “🍸”, distId: 1 },
+{ id: 17, name: “Tito’s”, category: “Vodka”, unit: “750ml”, stock: 4, backup: 4, par: 4, velocity: 6.2, trend: “up”, emoji: “🍸”, distId: 1 },
+{ id: 18, name: “New Amsterdam Vodka”, category: “Vodka”, unit: “750ml”, stock: 3, backup: 3, par: 3, velocity: 4.5, trend: “up”, emoji: “🍸”, distId: 1 },
+{ id: 19, name: “Kettle One”, category: “Vodka”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 3.0, trend: “stable”, emoji: “🍸”, distId: 1 },
+{ id: 20, name: “Watermelon Basil Vodka”, category: “Vodka”, unit: “750ml”, stock: 1, backup: 1, par: 1, velocity: 2.0, trend: “up”, emoji: “🍸”, distId: 1 },
+// ── GIN ───────────────────────────────────────────────────────────────────
+{ id: 21, name: “Bombay Sapphire”, category: “Gin”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 2.8, trend: “stable”, emoji: “🫙”, distId: 1 },
+{ id: 22, name: “Hendricks”, category: “Gin”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 2.5, trend: “up”, emoji: “🫙”, distId: 1 },
+// ── RON ───────────────────────────────────────────────────────────────────
+{ id: 23, name: “House Rum”, category: “Ron”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 4.5, trend: “up”, emoji: “🍹”, distId: 2 },
+{ id: 24, name: “Malibu Pink”, category: “Licores”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 3.2, trend: “up”, emoji: “🌺”, distId: 2 },
+// ── TEQUILA ───────────────────────────────────────────────────────────────
+{ id: 25, name: “House Tequila”, category: “Tequila”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 4.8, trend: “up”, emoji: “🌵”, distId: 2 },
+{ id: 26, name: “Julio Blanco”, category: “Tequila”, unit: “750ml”, stock: 2, backup: 2, par: 2, velocity: 3.5, trend: “up”, emoji: “🌵”, distId: 2 },
+// ── VINO ──────────────────────────────────────────────────────────────────
+{ id: 27, name: “Copper Ridge Cabernet”, category: “Vino”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 3.0, trend: “stable”, emoji: “🍷”, distId: 3 },
+{ id: 28, name: “Chateau Ste Michelle Riesling”, category: “Vino”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 2.0, trend: “stable”, emoji: “🍷”, distId: 3 },
+{ id: 29, name: “Chateau Ste Michelle Cabernet”, category: “Vino”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 2.0, trend: “stable”, emoji: “🍷”, distId: 3 },
+{ id: 30, name: “Pinot Noir”, category: “Vino”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 2.5, trend: “up”, emoji: “🍷”, distId: 3 },
+{ id: 31, name: “Sauvignon Blanc”, category: “Vino”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 1.8, trend: “stable”, emoji: “🍷”, distId: 3 },
+// ── MIXERS / JUGOS ────────────────────────────────────────────────────────
+{ id: 32, name: “Grenadine”, category: “Jugos”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 2.0, trend: “stable”, emoji: “🧃”, distId: 5 },
+{ id: 33, name: “Margarita Mix”, category: “Jugos”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 2.5, trend: “up”, emoji: “🧃”, distId: 5 },
+{ id: 34, name: “Coco Lopez”, category: “Jugos”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 1.5, trend: “stable”, emoji: “🥥”, distId: 5 },
+{ id: 35, name: “Tonic Water”, category: “Sodas”, unit: “case”, stock: 4, backup: 4, par: 4, velocity: 5.0, trend: “up”, emoji: “🥤”, distId: 4 },
+// ── CERVEZA BOTELLA/LATA ──────────────────────────────────────────────────
+{ id: 36, name: “Stella Artois”, category: “Cerveza”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 4.0, trend: “stable”, emoji: “🍺”, distId: 4 },
+{ id: 37, name: “Corona”, category: “Cerveza”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 5.5, trend: “up”, emoji: “🍺”, distId: 4 },
+{ id: 38, name: “Flat Tire”, category: “Cerveza”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 3.5, trend: “up”, emoji: “🍺”, distId: 4 },
+{ id: 39, name: “Truly”, category: “Cerveza”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 4.2, trend: “up”, emoji: “🍺”, distId: 4 },
+{ id: 40, name: “High Noon”, category: “Cerveza”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 4.8, trend: “up”, emoji: “🍺”, distId: 4 },
+{ id: 41, name: “Modelo”, category: “Cerveza”, unit: “case”, stock: 1, backup: 1, par: 1, velocity: 5.0, trend: “up”, emoji: “🍺”, distId: 4 },
+{ id: 42, name: “Yuengling”, category: “Cerveza”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 3.8, trend: “stable”, emoji: “🍺”, distId: 4 },
+{ id: 43, name: “Miller”, category: “Cerveza”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 4.0, trend: “stable”, emoji: “🍺”, distId: 4 },
+{ id: 44, name: “Voodoo Ranger”, category: “Cerveza”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 3.5, trend: “up”, emoji: “🍺”, distId: 4 },
+{ id: 45, name: “Modelo Ultra”, category: “Cerveza”, unit: “case”, stock: 2, backup: 2, par: 2, velocity: 3.8, trend: “up”, emoji: “🍺”, distId: 4 },
+// ── KEGS ──────────────────────────────────────────────────────────────────
+{ id: 46, name: “Samuel Adams (Keg)”, category: “Cerveza”, unit: “keg”, stock: 1, backup: 1, par: 1, velocity: 2.0, trend: “stable”, emoji: “🛢️”, distId: 4 },
+{ id: 47, name: “Buenaveza (Keg)”, category: “Cerveza”, unit: “keg”, stock: 1, backup: 1, par: 1, velocity: 2.0, trend: “up”, emoji: “🛢️”, distId: 4 },
+{ id: 48, name: “Mostly (Keg)”, category: “Cerveza”, unit: “keg”, stock: 1, backup: 1, par: 1, velocity: 1.8, trend: “stable”, emoji: “🛢️”, distId: 4 },
+{ id: 49, name: “Mango Cart (Keg)”, category: “Cerveza”, unit: “keg”, stock: 1, backup: 1, par: 1, velocity: 2.0, trend: “up”, emoji: “🛢️”, distId: 4 },
+];
+const INIT_DISTS = [
+{ id: 1, name: “Southern Glazer’s”, short: “Southern Glazer’s”, phone: “1-800-815-1400”, email: “orders@southernglazers.com”, rep: “Carlos Mendez”, repPhone: “305-555-0191”, categories: [“Whisky”, “Vodka”, “Gin”, “Cognac”], color: “#c8964e”, notes: “Min $500. Entrega mar y vie.” },
+{ id: 2, name: “RNDC”, short: “RNDC”, phone: “1-888-367-7632”, email: “orders@rndc-usa.com”, rep: “Maria Torres”, repPhone: “786-555-0282”, categories: [“Ron”, “Tequila”, “Licores”], color: “#6e8ec8”, notes: “Min $300. Entrega lun y jue.” },
+{ id: 3, name: “Glazer’s Beverage”, short: “Glazer’s”, phone: “1-800-527-9195”, email: “orders@glazers.com”, rep: “Luis Reyes”, repPhone: “954-555-0393”, categories: [“Cognac”, “Licores”, “Vino”], color: “#a04060”, notes: “Min $200. Entrega mie.” },
+{ id: 4, name: “Gold Coast Dist.”, short: “Gold Coast”, phone: “1-800-446-2653”, email: “orders@goldcoast.com”, rep: “Sandra Cruz”, repPhone: “561-555-0404”, categories: [“Cerveza”, “Sodas”], color: “#e8c84a”, notes: “Min $150. Entrega lun/mie/vie.” },
+{ id: 5, name: “Cideblocks Dist.”, short: “Cideblocks”, phone: “1-800-555-0505”, email: “orders@cideblocks.com”, rep: “Ana Rivera”, repPhone: “407-555-0505”, categories: [“Vino”, “Jugos”, “Sodas”, “Frutas”], color: “#6ec86e”, notes: “Min $100. Entrega mar.” },
+];
+const CATS = [“Todos”, “Whisky”, “Vodka”, “Ron”, “Tequila”, “Gin”, “Cognac”, “Licores”, “Cerveza”, “Vino”, “Jugos”, “Frutas”, “Sodas”, “Desechables”];
+const CAT_CLR = { Whisky: “#c8964e”, Vodka: “#6eb5c8”, Ron: “#c86e6e”, Tequila: “#8ec86e”, Gin: “#8e6ec8”, Cognac: “#c8a86e”, Licores: “#c86ea8”, Cerveza: “#e8c84a”, Vino: “#a04060”, Jugos: “#e8904a”, Frutas: “#6ec86e”, Sodas: “#4ab8e8”, Desechables: “#909090” };
+const CAT_EMO = { Whisky: “🥃”, Vodka: “🍸”, Ron: “🍹”, Tequila: “🌵”, Gin: “🫙”, Cognac: “🍷”, Licores: “🥛”, Cerveza: “🍺”, Vino: “🍷”, Jugos: “🧃”, Frutas: “🍓”, Sodas: “🥤”, Desechables: “🥤” };
+const UNIT_DEF = { Whisky: “750ml”, Vodka: “750ml”, Ron: “750ml”, Tequila: “750ml”, Gin: “750ml”, Cognac: “750ml”, Licores: “750ml”, Cerveza: “355ml lata”, Vino: “750ml botella”, Jugos: “1L caja”, Frutas: “kg”, Sodas: “2L botella”, Desechables: “paquete x50” };
+const PALETTE = [”#c8964e”, “#6e8ec8”, “#a04060”, “#e8c84a”, “#8ec86e”, “#8e6ec8”, “#c86e6e”, “#4ab8e8”, “#44cc88”, “#c86ea8”];
+const ACT = { ADD: “ADD”, DEL: “DEL”, STOCK: “STOCK”, BACKUP: “BACKUP”, PAR: “PAR”, LOGIN: “LOGIN”, LOGOUT: “LOGOUT”, ORDER: “ORDER” };
+const ACT_CLR = { ADD: “#44cc88”, DEL: “#ff4444”, STOCK: “#c8964e”, BACKUP: “#6e8ec8”, PAR: “#8a7a6a”, LOGIN: “#6ec86e”, LOGOUT: “#8a7a6a”, ORDER: “#a04060” };
+const ACT_LBL = { ADD: “Añadió”, DEL: “Eliminó”, STOCK: “Ajustó stock”, BACKUP: “Ajustó backup”, PAR: “Editó mínimo”, LOGIN: “Entró”, LOGOUT: “Salió”, ORDER: “Generó pedido” };
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+const tsNow = () => new Date().toLocaleTimeString(“es-US”, { hour: “2-digit”, minute: “2-digit”, second: “2-digit”, hour12: true });
+const dateNow = () => new Date().toLocaleDateString(“es-US”, { month: “short”, day: “numeric”, year: “numeric” });
+// ── STORAGE ──
+async function shGet(key, fallback) { try {
+const v = localStorage.getItem(key);
+if (v !== null && v !== “”)
+return JSON.parse(v);
+}
+catch (e) { } return fallback; }
+async function shSet(key, value) { try {
+localStorage.setItem(key, JSON.stringify(value));
+}
+catch (e) { } }
+async function shGetSync(key, fallback) { return shGet(key, fallback); }
+function lsGet(key, fallback) { try {
+const v = localStorage.getItem(key);
+if (v !== null && v !== “”)
+return JSON.parse(v);
+}
+catch (e) { } return fallback; }
+function lsSet(key, value) { try {
 localStorage.setItem(key, JSON.stringify(value));
 }
 catch (e) { } }
@@ -17,13 +116,13 @@ input: { background: “rgba(255,255,255,.05)”, border: “1px solid #2a1e12�
 inputD: { background: “rgba(255,255,255,.05)”, border: “1px solid #1a2a3a”, borderRadius: 7, padding: “7px 10px”, color: “#e0eaf0”, fontSize: 12, outline: “none” },
 };
 // ── SESSION SECURITY ─────────────────────────────────────────────────────────
-// Sessions are in-memory only — closing/reloading always requires re-login
+// Sessions are in-memory only – closing/reloading always requires re-login
 // No session token is ever stored to disk
 // ═══════════════════════════════════════════════════════════════════════════════
 // ROOT
 // ═══════════════════════════════════════════════════════════════════════════════
 function App() {
-// screen always starts at “login” — never persisted
+// screen always starts at “login” – never persisted
 const [screen, setScreen] = useState(“login”);
 const [user, setUser] = useState(null);
 const [isSuperAdmin, setIsSuperAdmin] = useState(false);
@@ -64,7 +163,7 @@ setScreen(a ? “admin” : “inv”);
 const handleLogout = async (userName) => {
 if (userName)
 await removeUser(userName);
-// Full reset — forces re-login
+// Full reset – forces re-login
 setUser(null);
 setIsSuperAdmin(false);
 setScreen(“login”);
@@ -78,7 +177,7 @@ if (screen === “inv”)
 return React.createElement(InvApp, { user: user, onLogout: () => handleLogout(user) });
 if (screen === “admin”)
 return (React.createElement(AdminApp, { pin: pin, adminUser: adminUser, staff: staff, isSuperAdmin: isSuperAdmin, onPin: changePin, onAdminUser: changeAdminUser, onStaff: changeStaff, onLogout: () => handleLogout(null) }));
-// Fallback safety — always login
+// Fallback safety – always login
 return React.createElement(Login, { pin: pin, adminUser: adminUser, staff: staff, onLogin: handleLogin });
 }
 function Splash() {
@@ -120,7 +219,7 @@ if (!match) {
 setErr(“Nombre no autorizado. Verifica con el administrador.”);
 return;
 }
-await appendLog({ user: match, type: ACT.LOGIN, detail: “Accedió al inventario”, item: “—”, ts: tsNow(), date: dateNow() });
+await appendLog({ user: match, type: ACT.LOGIN, detail: “Accedió al inventario”, item: “–”, ts: tsNow(), date: dateNow() });
 await upsertUser(match);
 onLogin(match, false, false);
 }
@@ -215,7 +314,7 @@ hbRef.current = setInterval(() => upsertUser(user), 15000);
 return () => clearInterval(hbRef.current);
 }, [user]);
 const toast = (msg, type = “ok”) => { setNotif({ msg, type }); setTimeout(() => setNotif(null), 3000); };
-const log = useCallback(async (type, item, detail) => { await appendLog({ user, type, detail, item: item || “—”, ts: tsNow(), date: dateNow() }); }, [user]);
+const log = useCallback(async (type, item, detail) => { await appendLog({ user, type, detail, item: item || “–”, ts: tsNow(), date: dateNow() }); }, [user]);
 const saveInv = async (next) => { setInv(next); await shSet(“lp:inventory”, next); };
 const saveDists = async (next) => { setDists(next); await shSet(“lp:distributors”, next); };
 const saveOrders = async (next) => { setOrders(next); await shSet(“lp:orders”, next); };
@@ -230,7 +329,7 @@ const ev = { type: “finished”, date: dateNow(), ts: tsNow(), user, stock: 0 
 history.push(ev);
 updates.lastFinished = dateNow();
 updates.history = history;
-toast(`⚠️ ${it.name} se agotó — registrado`, “err”);
+toast(`⚠️ ${it.name} se agotó -- registrado`, “err”);
 }
 // Coming from 0 → record arrival
 if (it.stock === 0 && newStock > 0) {
@@ -238,7 +337,7 @@ const ev = { type: “arrived”, date: dateNow(), ts: tsNow(), user, stock: new
 history.push(ev);
 updates.lastArrived = dateNow();
 updates.history = history;
-toast(`📦 ${it.name} llegó — registrado`);
+toast(`📦 ${it.name} llegó -- registrado`);
 }
 // Recalculate velocity from history if we have cycles
 const cycles = calcCycles(history);
@@ -253,7 +352,7 @@ const it = inv.find(i => i.id === id);
 const history = it.history ? […it.history] : [];
 history.push({ type: “arrived”, date: dateNow(), ts: tsNow(), user, stock: it.stock });
 await saveInv(inv.map(i => i.id === id ? { …i, history, lastArrived: dateNow() } : i));
-await log(ACT.STOCK, it.name, `Llegada registrada — stock:${it.stock}`);
+await log(ACT.STOCK, it.name, `Llegada registrada -- stock:${it.stock}`);
 toast(`📦 Llegada de ${it.name} registrada`);
 };
 const markFinished = async (id) => {
@@ -423,7 +522,7 @@ setAiText(“Error de conexion.”);
 }
 setAiLoading(false);
 };
-const logout = async () => { await log(ACT.LOGOUT, “—”, “Cerro sesion”); await removeUser(user); onLogout(); };
+const logout = async () => { await log(ACT.LOGOUT, “–”, “Cerro sesion”); await removeUser(user); onLogout(); };
 if (!inv || !dists)
 return React.createElement(Splash, null);
 const filt = inv.filter(i => (filter === “Todos” || i.category === filter) && (i.name.toLowerCase().includes(search.toLowerCase()) || i.category.toLowerCase().includes(search.toLowerCase())));
@@ -478,8 +577,7 @@ React.createElement(“div”, { style: { display: “grid”, gridTemplateColum
 React.createElement(“div”, null, “Producto”),
 React.createElement(“div”, { style: { textAlign: “center” } }, “Stock”),
 React.createElement(“div”, { style: { textAlign: “center” } }, “Backup”),
-React.createElement(“div”,
-{ style: { textAlign: “center” } }, “Min\u270F\uFE0F”),
+React.createElement(“div”, { style: { textAlign: “center” } }, “Min\u270F\uFE0F”),
 React.createElement(“div”, { style: { textAlign: “center” } }, “Ciclo”),
 React.createElement(“div”, { style: { textAlign: “center” } }, “Estado”),
 React.createElement(“div”, { style: { textAlign: “center” } }, “Acciones”)),
@@ -504,818 +602,4 @@ React.createElement(“span”, { style: { fontSize: 8, color: CAT_CLR[it.catego
 it.category,
 “\u00B7”,
 it.unit),
-d && React.createElement(“span”, { style: { fontSize: 7, background: `${d.color}22`, border: `1px solid ${d.color}44`, color: d.color, borderRadius: 9, padding: “0 4px” } }, d.short),
-it.lastArrived && React.createElement(“span”, { style: { fontSize: 7, color: “#44cc88” } },
-“\uD83D\uDCE6 “,
-it.lastArrived),
-it.lastRetired && React.createElement(“span”, { style: { fontSize: 7, color: “#ffaa00” } },
-“\uD83D\uDDD1\uFE0F “,
-it.lastRetired),
-it.lastFinished && React.createElement(“span”, { style: { fontSize: 7, color: “#ff8888” } },
-“\uD83D\uDD34 “,
-it.lastFinished)))),
-React.createElement(“div”, { style: { textAlign: “center” } },
-React.createElement(“div”, { style: { display: “flex”, alignItems: “center”, justifyContent: “center”, gap: 2 } },
-React.createElement(“button”, { onClick: () => adjStock(it.id, -1), style: S.mini }, “\u2212”),
-React.createElement(“span”, { style: { fontSize: 13, fontWeight: 700, color: st.c, minWidth: 22, textAlign: “center” } }, it.stock),
-React.createElement(“button”, { onClick: () => adjStock(it.id, 1), style: S.mini }, “+”))),
-React.createElement(“div”, { style: { textAlign: “center” } },
-React.createElement(“div”, { style: { display: “flex”, alignItems: “center”, justifyContent: “center”, gap: 2 } },
-React.createElement(“button”, { onClick: () => adjBackup(it.id, -1), style: S.mini }, “\u2212”),
-React.createElement(“span”, { style: { fontSize: 13, fontWeight: 700, color: “#c8964e”, minWidth: 22, textAlign: “center” } }, it.backup),
-React.createElement(“button”, { onClick: () => adjBackup(it.id, 1), style: S.mini }, “+”))),
-React.createElement(“div”, { style: { textAlign: “center” } }, editParId === it.id ? React.createElement(“input”, { type: “number”, value: editParV, onChange: e => setEditParV(e.target.value), onBlur: () => commitPar(it.id), onKeyDown: e => { if (e.key === “Enter”)
-commitPar(it.id); if (e.key === “Escape”)
-setEditParId(null); }, autoFocus: true, style: { width: 34, background: “#1a1208”, border: “1px solid #c8964e”, borderRadius: 4, color: “#f0e6d0”, fontSize: 11, textAlign: “center”, padding: “1px 2px”, outline: “none” } }) : React.createElement(“button”, { onClick: () => { setEditParId(it.id); setEditParV(String(it.par)); }, style: { background: “rgba(200,150,78,.1)”, border: “1px dashed #c8964e44”, borderRadius: 4, color: “#c8964e”, fontSize: 11, fontWeight: 700, cursor: “pointer”, padding: “1px 6px” } },
-it.par,
-React.createElement(“span”, { style: { fontSize: 6, opacity: .5 } }, “ \u270F\uFE0F”))),
-React.createElement(“div”, { style: { textAlign: “center” } }, cycles.avgDays > 0
-? React.createElement(“div”, null,
-React.createElement(“div”, { style: { fontSize: 10, fontWeight: 700, color: “#6eb5c8” } },
-cycles.avgDays,
-“d”),
-React.createElement(“div”, { style: { fontSize: 7, color: “#4a6a7a” } },
-cycles.cycles,
-“ ciclo”,
-cycles.cycles !== 1 ? “s” : “”))
-: React.createElement(“span”, { style: { fontSize: 10, color: tc } },
-tr,
-it.velocity)),
-React.createElement(“div”, { style: { textAlign: “center” } },
-React.createElement(“span”, { style: { background: `${st.c}22`, border: `1px solid ${st.c}55`, color: st.c, borderRadius: 20, padding: “1px 6px”, fontSize: 7, fontWeight: 700 } }, st.l)),
-React.createElement(“div”, { style: { textAlign: “center”, display: “flex”, flexDirection: “column”, gap: 3, alignItems: “center” } },
-React.createElement(“div”, { style: { display: “flex”, gap: 3 } },
-React.createElement(“button”, { onClick: () => markArrived(it.id), title: “Registrar llegada hoy”, style: { background: “rgba(68,204,136,.12)”, border: “1px solid rgba(68,204,136,.3)”, color: “#44cc88”, borderRadius: 4, padding: “2px 5px”, cursor: “pointer”, fontSize: 8, lineHeight: 1.4 } }, “\uD83D\uDCE6”),
-React.createElement(“button”, { onClick: () => { setRetireItem(it); setRetireQty(“1”); setRetireReason(””); }, title: “Retirar producto”, style: { background: “rgba(255,170,0,.1)”, border: “1px solid rgba(255,170,0,.3)”, color: “#ffaa44”, borderRadius: 4, padding: “2px 5px”, cursor: “pointer”, fontSize: 8, lineHeight: 1.4 } }, “\uD83D\uDDD1\uFE0F”),
-React.createElement(“button”, { onClick: () => markFinished(it.id), title: “Marcar como agotado”, style: { background: “rgba(255,68,68,.1)”, border: “1px solid rgba(255,68,68,.3)”, color: “#ff8888”, borderRadius: 4, padding: “2px 5px”, cursor: “pointer”, fontSize: 8, lineHeight: 1.4 } }, “\uD83D\uDD34”),
-React.createElement(“button”, { onClick: () => delItem(it.id), title: “Eliminar producto”, style: { background: “rgba(255,68,68,.05)”, border: “1px solid rgba(255,68,68,.2)”, color: “#ff6666”, borderRadius: 4, padding: “2px 5px”, cursor: “pointer”, fontSize: 8, lineHeight: 1.4 } }, “\u2715”)))));
-}),
-filt.length === 0 && React.createElement(“div”, { style: { textAlign: “center”, padding: “32px”, color: “#4a3a2a”, fontSize: 11 } }, “Sin resultados”))),
-showAI && React.createElement(“div”, { style: { margin: “14px 22px 0” } },
-React.createElement(“div”, { style: { background: “linear-gradient(135deg,#0d0a1a,#0a0f1a)”, border: “1px solid #2a2a4a”, borderRadius: 11, padding: 16 } },
-React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between”, marginBottom: 10 } },
-React.createElement(“div”, { style: { fontSize: 13, color: “#c8d4f0” } }, “\uD83E\uDD16 An\u00E1lisis IA”),
-React.createElement(“button”, { onClick: () => setShowAI(false), style: { background: “none”, border: “none”, color: “#4a4a6a”, cursor: “pointer”, fontSize: 14 } }, “\u2715”)),
-aiLoading ? React.createElement(“div”, { style: { textAlign: “center”, padding: “20px”, color: “#6e8ec8”, fontSize: 12 } }, “\u23F3 Analizando…”) : React.createElement(“div”, null, aiText.split(”\n”).map((l, i) => l.startsWith(”### “) ? React.createElement(“div”, { key: i, style: { color: “#c8964e”, fontWeight: 700, fontSize: 11, marginTop: 10, textTransform: “uppercase” } }, l.replace(”### “, “”)) : React.createElement(“div”, { key: i, style: { color: “#c8b99a”, fontSize: 11, lineHeight: 1.6 } }, l))))))),
-view === “distributors” && (React.createElement(“div”, { style: { padding: “16px 22px” } },
-React.createElement(“div”, { style: { display: “grid”, gridTemplateColumns: “repeat(auto-fill,minmax(290px,1fr))”, gap: 10 } }, dists.map(d => {
-const di = inv.filter(i => i.distId === d.id);
-return (React.createElement(“div”, { key: d.id, style: { background: “rgba(255,255,255,.025)”, border: `1px solid ${d.color}44`, borderRadius: 12 } },
-React.createElement(“div”, { style: { background: `linear-gradient(135deg,${d.color}22,transparent)`, borderBottom: `1px solid ${d.color}22`, padding: “12px 14px”, display: “flex”, justifyContent: “space-between”, alignItems: “flex-start” } },
-React.createElement(“div”, null,
-React.createElement(“div”, { style: { fontSize: 8, letterSpacing: 2, color: d.color, textTransform: “uppercase”, marginBottom: 2 } }, “Distribuidora”),
-React.createElement(“div”, { style: { fontSize: 14, fontWeight: 600, color: “#f0e6d0” } }, d.name),
-React.createElement(“div”, { style: { fontSize: 9, color: “#8a7a6a” } },
-di.length,
-“ productos”)),
-React.createElement(“div”, { style: { display: “flex”, gap: 4 } },
-React.createElement(“button”, { onClick: () => { setEditDistId(d.id); setNewDist({ …d }); setShowDistM(true); }, style: { background: `${d.color}22`, border: `1px solid ${d.color}44`, color: d.color, borderRadius: 4, padding: “2px 7px”, cursor: “pointer”, fontSize: 9 } }, “\u270F\uFE0F”),
-React.createElement(“button”, { onClick: () => delDist(d.id), style: { background: “rgba(255,68,68,.1)”, border: “1px solid rgba(255,68,68,.3)”, color: “#ff6666”, borderRadius: 4, padding: “2px 7px”, cursor: “pointer”, fontSize: 9 } }, “\u2715”))),
-React.createElement(“div”, { style: { padding: “10px 14px” } },
-React.createElement(“div”, { style: { display: “grid”, gridTemplateColumns: “1fr 1fr”, gap: 7, marginBottom: 8 } },
-React.createElement(“div”, null,
-React.createElement(“div”, { style: { fontSize: 7, color: “#6a5a4a”, letterSpacing: 1, marginBottom: 2 } }, “TELEFONO”),
-React.createElement(“a”, { href: `tel:${d.phone}`, style: { fontSize: 10, color: “#c8d4f0”, textDecoration: “none” } },
-“\uD83D\uDCDE “,
-d.phone)),
-React.createElement(“div”, null,
-React.createElement(“div”, { style: { fontSize: 7, color: “#6a5a4a”, letterSpacing: 1, marginBottom: 2 } }, “EMAIL”),
-React.createElement(“a”, { href: `mailto:${d.email}`, style: { fontSize: 9, color: “#c8d4f0”, textDecoration: “none”, wordBreak: “break-all” } },
-“\u2709\uFE0F “,
-d.email))),
-d.rep && React.createElement(“div”, { style: { marginBottom: 7 } },
-React.createElement(“div”, { style: { fontSize: 7, color: “#6a5a4a”, letterSpacing: 1, marginBottom: 1 } }, “REP”),
-React.createElement(“div”, { style: { fontSize: 10, color: “#f0e6d0” } },
-d.rep,
-d.repPhone && React.createElement(React.Fragment, null,
-“ \u00B7 “,
-React.createElement(“a”, { href: `tel:${d.repPhone}`, style: { color: “#c8d4f0”, textDecoration: “none” } }, d.repPhone)))),
-d.notes && React.createElement(“div”, { style: { fontSize: 9, color: “#8a7a6a”, background: “rgba(255,255,255,.03)”, borderRadius: 6, padding: “5px 8px”, borderLeft: `2px solid ${d.color}55`, marginBottom: 8 } },
-“\uD83D\uDCDD “,
-d.notes),
-React.createElement(“div”, { style: { display: “grid”, gridTemplateColumns: “1fr 1fr 1fr”, gap: 4 } },
-React.createElement(“a”, { href: `tel:${d.phone}`, style: { background: `${d.color}22`, border: `1px solid ${d.color}44`, color: d.color, borderRadius: 6, padding: “6px 3px”, fontSize: 9, fontWeight: 600, textAlign: “center”, textDecoration: “none”, display: “block” } }, “\uD83D\uDCDE Llamar”),
-React.createElement(“a”, { href: `mailto:${d.email}?subject=Pedido de Inventario`, style: { background: “rgba(110,181,200,.1)”, border: “1px solid rgba(110,181,200,.3)”, color: “#6eb5c8”, borderRadius: 6, padding: “6px 3px”, fontSize: 9, fontWeight: 600, textAlign: “center”, textDecoration: “none”, display: “block” } }, “\u2709\uFE0F Email”),
-React.createElement(“button”, { onClick: () => { setActiveDist(d.id); setView(“orders”); }, style: { background: “rgba(68,204,136,.1)”, border: “1px solid rgba(68,204,136,.3)”, color: “#44cc88”, borderRadius: 6, padding: “6px 3px”, fontSize: 9, fontWeight: 600, cursor: “pointer” } }, “\uD83D\uDCE6 Pedido”)))));
-})))),
-view === “orders” && (React.createElement(“div”, { style: { padding: “16px 22px” } },
-React.createElement(“div”, { style: { display: “grid”, gridTemplateColumns: “200px 1fr”, gap: 12, alignItems: “start” } },
-React.createElement(“div”, null,
-React.createElement(“div”, { style: { fontSize: 8, letterSpacing: 2, color: “#8a7a6a”, marginBottom: 7, textTransform: “uppercase” } }, “Distribuidora”),
-dists.map(d => (React.createElement(“button”, { key: d.id, onClick: () => { setActiveDist(d.id); setOrderQ({}); setAiOrderLines([]); }, style: { width: “100%”, background: activeDist === d.id ? `${d.color}2a` : “rgba(255,255,255,.03)”, border: `1px solid ${activeDist === d.id ? d.color : "#2a1e12"}`, borderRadius: 8, padding: “8px 10px”, cursor: “pointer”, textAlign: “left”, marginBottom: 4, transition: “all .2s” } },
-React.createElement(“div”, { style: { fontSize: 10, fontWeight: 600, color: activeDist === d.id ? d.color : “#f0e6d0” } }, d.short || d.name),
-React.createElement(“div”, { style: { fontSize: 8, color: “#6a5a4a”, marginTop: 1 } },
-inv.filter(i => i.distId === d.id).length,
-“ productos”)))),
-orders.length > 0 && React.createElement(React.Fragment, null,
-React.createElement(“div”, { style: { fontSize: 8, letterSpacing: 2, color: “#8a7a6a”, margin: “12px 0 5px”, textTransform: “uppercase” } }, “Guardados”),
-orders.slice(0, 5).map(o => React.createElement(“div”, { key: o.id, style: { background: “rgba(255,255,255,.03)”, border: “1px solid #2a1e12”, borderRadius: 7, padding: “7px 9px”, marginBottom: 4 } },
-React.createElement(“div”, { style: { fontSize: 9, color: “#f0e6d0”, fontWeight: 600 } }, o.distName),
-React.createElement(“div”, { style: { fontSize: 8, color: “#6a5a4a” } },
-o.date,
-“ \u00B7 “,
-o.total,
-“u.”))))),
-!activeDist
-? React.createElement(“div”, { style: { background: “rgba(255,255,255,.02)”, border: “1px solid #2a1e12”, borderRadius: 11, padding: “44px”, textAlign: “center”, color: “#4a3a2a”, fontSize: 12 } }, “\uD83D\uDCCB Selecciona una distribuidora”)
-: (() => {
-const d = dists.find(d => d.id === activeDist);
-return (React.createElement(“div”, null,
-React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between”, alignItems: “flex-start”, marginBottom: 10, flexWrap: “wrap”, gap: 7 } },
-React.createElement(“div”, null,
-React.createElement(“div”, { style: { fontSize: 8, letterSpacing: 2, color: d.color, textTransform: “uppercase”, marginBottom: 1 } }, “Nuevo Pedido”),
-React.createElement(“div”, { style: { fontSize: 15, color: “#f0e6d0”, fontWeight: 500 } }, d.name),
-React.createElement(“div”, { style: { fontSize: 9, color: “#6a5a4a” } }, d.notes)),
-React.createElement(“div”, { style: { display: “flex”, gap: 5 } },
-React.createElement(“button”, { onClick: aiOrder, disabled: aiOrderLoading, style: { …S.btn(d.color), fontSize: 10, opacity: aiOrderLoading ? .5 : 1 } }, aiOrderLoading ? “⏳ Generando…” : “🤖 Auto IA”),
-React.createElement(“button”, { onClick: saveOrder, style: { …S.btn(”#44cc88”), fontSize: 10 } }, “\uD83D\uDCBE Guardar”))),
-aiOrderLines.length > 0 && React.createElement(“div”, { style: { background: “rgba(110,181,200,.07)”, border: “1px solid rgba(110,181,200,.2)”, borderRadius: 8, padding: “9px 11px”, marginBottom: 9 } },
-React.createElement(“div”, { style: { fontSize: 7, color: “#6e8ec8”, letterSpacing: 2, marginBottom: 4 } }, “SUGERENCIA IA”),
-aiOrderLines.map((l, i) => React.createElement(“div”, { key: i, style: { fontSize: 10, color: “#c8d4f0”, lineHeight: 1.6 } },
-“\u2022 “,
-React.createElement(“b”, null, l.name),
-“: “,
-l.qty,
-“u \u2014 “,
-React.createElement(“span”, { style: { color: “#8a8a9a” } }, l.reason)))),
-React.createElement(“input”, { value: orderNote, onChange: e => setOrderNote(e.target.value), placeholder: “Nota (opcional)…”, style: { …S.input, width: “100%”, boxSizing: “border-box”, marginBottom: 8, padding: “6px 10px”, fontSize: 10 } }),
-React.createElement(“div”, { style: { background: “rgba(255,255,255,.02)”, border: “1px solid #2a1e12”, borderRadius: 10, overflow: “hidden” } },
-React.createElement(“div”, { style: { display: “grid”, gridTemplateColumns: “2fr 1fr 1fr 1fr 1.2fr”, background: “#120c06”, padding: “6px 12px”, fontSize: 7, color: “#6a5a4a”, letterSpacing: 1.5, textTransform: “uppercase”, borderBottom: “1px solid #2a1e12” } },
-React.createElement(“div”, null, “Producto”),
-React.createElement(“div”, { style: { textAlign: “center” } }, “Stock”),
-React.createElement(“div”, { style: { textAlign: “center” } }, “Min”),
-React.createElement(“div”, { style: { textAlign: “center” } }, “Estado”),
-React.createElement(“div”, { style: { textAlign: “center” } }, “Pedir”)),
-distInv.length === 0 && React.createElement(“div”, { style: { textAlign: “center”, padding: “24px”, color: “#4a3a2a”, fontSize: 10 } }, “Sin productos asignados”),
-distInv.map((it, idx) => {
-const st = stStatus(it);
-const qty = orderQ[it.id] || 0;
-return (React.createElement(“div”, { key: it.id, style: { display: “grid”, gridTemplateColumns: “2fr 1fr 1fr 1fr 1.2fr”, padding: “8px 12px”, borderBottom: idx < distInv.length - 1 ? “1px solid #1a1208” : “none”, alignItems: “center”, background: qty > 0 ? “rgba(68,204,136,.04)” : “transparent” } },
-React.createElement(“div”, { style: { display: “flex”, alignItems: “center”, gap: 6 } },
-React.createElement(“span”, { style: { fontSize: 15 } }, it.emoji),
-React.createElement(“div”, null,
-React.createElement(“div”, { style: { fontSize: 10, color: “#f0e6d0” } }, it.name),
-React.createElement(“div”, { style: { fontSize: 8, color: “#6a5a4a” } }, it.unit))),
-React.createElement(“div”, { style: { textAlign: “center”, fontSize: 12, fontWeight: 700, color: st.c } }, it.stock),
-React.createElement(“div”, { style: { textAlign: “center”, fontSize: 10, color: “#8a7a6a” } }, it.par),
-React.createElement(“div”, { style: { textAlign: “center” } },
-React.createElement(“span”, { style: { background: `${st.c}22`, border: `1px solid ${st.c}55`, color: st.c, borderRadius: 20, padding: “1px 5px”, fontSize: 7, fontWeight: 700 } }, st.l)),
-React.createElement(“div”, { style: { textAlign: “center” } },
-React.createElement(“div”, { style: { display: “flex”, alignItems: “center”, justifyContent: “center”, gap: 2 } },
-React.createElement(“button”, { onClick: () => setOrderQ(p => ({ …p, [it.id]: Math.max(0, (p[it.id] || 0) - 1) })), style: S.mini }, “\u2212”),
-React.createElement(“span”, { style: { fontSize: 13, fontWeight: 700, color: qty > 0 ? “#44cc88” : “#4a3a2a”, minWidth: 22, textAlign: “center” } }, qty),
-React.createElement(“button”, { onClick: () => setOrderQ(p => ({ …p, [it.id]: (p[it.id] || 0) + 1 })), style: S.mini }, “+”)))));
-})),
-oTotal > 0 && React.createElement(“div”, { style: { marginTop: 7, textAlign: “right”, fontSize: 11, color: “#44cc88”, fontWeight: 600 } },
-“Total: “,
-oTotal,
-“ unidades”)));
-})()))),
-showAdd && (React.createElement(“div”, { style: { position: “fixed”, inset: 0, background: “rgba(0,0,0,.88)”, zIndex: 200, display: “flex”, alignItems: “center”, justifyContent: “center” } },
-React.createElement(“div”, { style: { background: “#150f08”, border: “1px solid #3a2a1a”, borderRadius: 13, padding: 22, width: 340, boxShadow: “0 20px 60px rgba(0,0,0,.8)”, maxHeight: “90vh”, overflowY: “auto” } },
-React.createElement(“div”, { style: { fontSize: 14, marginBottom: 14, color: “#c8964e” } }, “+ A\u00F1adir Producto”),
-[[“Nombre”, “name”, “text”], [“Unidad”, “unit”, “text”], [“Stock”, “stock”, “number”], [“Backup”, “backup”, “number”], [“Minimo”, “par”, “number”]].map(([l, k, t]) => (React.createElement(“div”, { key: k, style: { marginBottom: 8 } },
-React.createElement(“div”, { style: { fontSize: 8, color: “#6a5a4a”, marginBottom: 2 } }, l),
-React.createElement(“input”, { type: t, value: newItem[k], onChange: e => setNewItem(p => ({ …p, [k]: t === “number” ? +e.target.value : e.target.value })), style: { …S.input, width: “100%”, boxSizing: “border-box”, fontSize: 11, padding: “5px 8px” } })))),
-React.createElement(“div”, { style: { marginBottom: 8 } },
-React.createElement(“div”, { style: { fontSize: 8, color: “#6a5a4a”, marginBottom: 2 } }, “Categoria”),
-React.createElement(“select”, { value: newItem.category, onChange: e => setNewItem(p => ({ …p, category: e.target.value, unit: UNIT_DEF[e.target.value] || “” })), style: { width: “100%”, background: “#1a1208”, border: “1px solid #2a1e12”, borderRadius: 6, padding: “5px 8px”, color: “#f0e6d0”, fontSize: 11, outline: “none” } }, CATS.filter(c => c !== “Todos”).map(c => React.createElement(“option”, { key: c, value: c },
-CAT_EMO[c] || “”,
-“ “,
-c)))),
-React.createElement(“div”, { style: { marginBottom: 14 } },
-React.createElement(“div”, { style: { fontSize: 8, color: “#6a5a4a”, marginBottom: 2 } }, “Distribuidora”),
-React.createElement(“select”, { value: newItem.distId, onChange: e => setNewItem(p => ({ …p, distId: +e.target.value })), style: { width: “100%”, background: “#1a1208”, border: “1px solid #2a1e12”, borderRadius: 6, padding: “5px 8px”, color: “#f0e6d0”, fontSize: 11, outline: “none” } },
-React.createElement(“option”, { value: “” }, “\u2014 Sin asignar \u2014”),
-dists.map(d => React.createElement(“option”, { key: d.id, value: d.id }, d.name)))),
-React.createElement(“div”, { style: { display: “flex”, gap: 6 } },
-React.createElement(“button”, { onClick: addItem, style: S.btn(”#c8964e”) }, “A\u00F1adir”),
-React.createElement(“button”, { onClick: () => setShowAdd(false), style: S.btn(”#2a1e12”, “#8a7a6a”) }, “Cancelar”))))),
-showDistM && (React.createElement(“div”, { style: { position: “fixed”, inset: 0, background: “rgba(0,0,0,.88)”, zIndex: 200, display: “flex”, alignItems: “center”, justifyContent: “center” } },
-React.createElement(“div”, { style: { background: “#150f08”, border: “1px solid #3a2a1a”, borderRadius: 13, padding: 22, width: 380, boxShadow: “0 20px 60px rgba(0,0,0,.8)”, maxHeight: “92vh”, overflowY: “auto” } },
-React.createElement(“div”, { style: { fontSize: 14, marginBottom: 14, color: “#c8964e” } },
-editDistId ? “✏️ Editar” : “+ Nueva”,
-“ Distribuidora”),
-[[“Nombre”, “name”, “text”], [“Nombre corto”, “short”, “text”], [“Telefono”, “phone”, “tel”], [“Email”, “email”, “email”], [“Representante”, “rep”, “text”], [“Tel. Rep”, “repPhone”, “tel”]].map(([l, k, t]) => (React.createElement(“div”, { key: k, style: { marginBottom: 8 } },
-React.createElement(“div”, { style: { fontSize: 8, color: “#6a5a4a”, marginBottom: 2 } }, l),
-React.createElement(“input”, { type: t, value: newDist[k] || “”, onChange: e => setNewDist(p => ({ …p, [k]: e.target.value })), style: { …S.input, width: “100%”, boxSizing: “border-box”, fontSize: 11, padding: “5px 8px” } })))),
-React.createElement(“div”, { style: { marginBottom: 8 } },
-React.createElement(“div”, { style: { fontSize: 8, color: “#6a5a4a”, marginBottom: 4 } }, “Categorias”),
-React.createElement(“div”, { style: { display: “flex”, flexWrap: “wrap”, gap: 3 } }, CATS.filter(c => c !== “Todos”).map(c => { const sel = newDist.categories?.includes(c); return React.createElement(“button”, { key: c, onClick: () => setNewDist(p => ({ …p, categories: sel ? p.categories.filter(x => x !== c) : […(p.categories || []), c] })), style: { background: sel ? (CAT_CLR[c] || “#888”) : “rgba(255,255,255,.05)”, border: `1px solid ${sel ? CAT_CLR[c] || "#888" : "#2a1e12"}`, borderRadius: 20, padding: “2px 8px”, color: sel ? “#0a0704” : “#6a5a4a”, fontSize: 8, cursor: “pointer” } },
-CAT_EMO[c] || “”,
-“ “,
-c); }))),
-React.createElement(“div”, { style: { marginBottom: 8 } },
-React.createElement(“div”, { style: { fontSize: 8, color: “#6a5a4a”, marginBottom: 4 } }, “Color”),
-React.createElement(“div”, { style: { display: “flex”, gap: 4, flexWrap: “wrap” } }, PALETTE.map(c => React.createElement(“button”, { key: c, onClick: () => setNewDist(p => ({ …p, color: c })), style: { width: 20, height: 20, borderRadius: “50%”, background: c, border: newDist.color === c ? “3px solid #fff” : “2px solid transparent”, cursor: “pointer”, padding: 0 } })))),
-React.createElement(“div”, { style: { marginBottom: 14 } },
-React.createElement(“div”, { style: { fontSize: 8, color: “#6a5a4a”, marginBottom: 2 } }, “Notas”),
-React.createElement(“textarea”, { value: newDist.notes || “”, onChange: e => setNewDist(p => ({ …p, notes: e.target.value })), rows: 2, style: { width: “100%”, background: “rgba(255,255,255,.05)”, border: “1px solid #2a1e12”, borderRadius: 6, padding: “5px 8px”, color: “#f0e6d0”, fontSize: 10, outline: “none”, resize: “vertical”, boxSizing: “border-box” } })),
-React.createElement(“div”, { style: { display: “flex”, gap: 6 } },
-React.createElement(“button”, { onClick: saveDist, style: S.btn(”#c8964e”) }, editDistId ? “Guardar” : “Añadir”),
-React.createElement(“button”, { onClick: () => setShowDistM(false), style: S.btn(”#2a1e12”, “#8a7a6a”) }, “Cancelar”))))),
-timelineItem && (React.createElement(“div”, { style: { position: “fixed”, inset: 0, background: “rgba(0,0,0,.9)”, zIndex: 300, display: “flex”, alignItems: “center”, justifyContent: “center”, padding: 16 }, onClick: () => setTimelineItem(null) },
-React.createElement(“div”, { style: { background: “#0d0a06”, border: “1px solid #2a1e12”, borderRadius: 16, width: “100%”, maxWidth: 500, maxHeight: “90vh”, overflowY: “auto”, boxShadow: “0 30px 80px rgba(0,0,0,.8)” }, onClick: e => e.stopPropagation() },
-React.createElement(“div”, { style: { padding: “18px 20px 14px”, borderBottom: “1px solid #1e1208”, display: “flex”, justifyContent: “space-between”, alignItems: “center”, position: “sticky”, top: 0, background: “#0d0a06”, zIndex: 1 } },
-React.createElement(“div”, null,
-React.createElement(“div”, { style: { fontSize: 9, letterSpacing: 3, color: “#c8964e”, textTransform: “uppercase”, marginBottom: 3 } }, “Rastreo de Ciclos”),
-React.createElement(“div”, { style: { fontSize: 16, color: “#f0e6d0”, fontWeight: 500 } },
-timelineItem.emoji,
-“ “,
-timelineItem.name)),
-React.createElement(“button”, { onClick: () => setTimelineItem(null), style: { background: “none”, border: “none”, color: “#6a5a4a”, cursor: “pointer”, fontSize: 20, lineHeight: 1 } }, “\u2715”)),
-React.createElement(“div”, { style: { padding: “16px 20px” } },
-(() => {
-const cyc = calcCycles(timelineItem.history);
-if (cyc.avgDays > 0) {
-const daysLeft = timelineItem.lastArrived
-? Math.max(0, cyc.avgDays - Math.round((Date.now() - new Date(timelineItem.lastArrived)) / 86400000))
-: null;
-return (React.createElement(“div”, { style: { display: “grid”, gridTemplateColumns: “repeat(4,1fr)”, gap: 7, marginBottom: 18 } }, [
-{ l: “Ciclo prom.”, v: `${cyc.avgDays}d`, c: “#6eb5c8” },
-{ l: “Ciclos reales”, v: cyc.cycles, c: “#44cc88” },
-{ l: “Vel. real”, v: `${parseFloat((timelineItem.par / cyc.avgDays * 7).toFixed(1))}/sem`, c: “#c8964e” },
-{ l: “Días restantes”, v: daysLeft !== null ? `~${daysLeft}d` : “—”, c: daysLeft !== null && daysLeft <= 3 ? “#ff4444” : “#ffaa00” },
-].map((s, i) => (React.createElement(“div”, { key: i, style: { background: “rgba(255,255,255,.03)”, border: “1px solid #1e1208”, borderRadius: 8, padding: “9px 10px”, textAlign: “center” } },
-React.createElement(“div”, { style: { fontSize: 7, color: “#6a5a4a”, letterSpacing: 1, textTransform: “uppercase”, marginBottom: 3 } }, s.l),
-React.createElement(“div”, { style: { fontSize: 14, fontWeight: 700, color: s.c } }, s.v))))));
-}
-return null;
-})(),
-React.createElement(“div”, { style: { background: “rgba(110,181,200,.06)”, border: “1px solid rgba(110,181,200,.2)”, borderRadius: 11, padding: “14px 16px”, marginBottom: 16 } },
-React.createElement(“div”, { style: { fontSize: 9, letterSpacing: 2, color: “#6eb5c8”, textTransform: “uppercase”, marginBottom: 12 } }, “\uD83D\uDCC5 Registrar Fecha Manualmente”),
-React.createElement(“div”, { style: { display: “flex”, gap: 5, marginBottom: 12 } }, [
-[“arrived”, “📦 Llegó”, “rgba(68,204,136,.15)”, “rgba(68,204,136,.4)”, “#44cc88”],
-[“retired”, “🗑️ Retirado”, “rgba(255,170,0,.12)”, “rgba(255,170,0,.4)”, “#ffaa44”],
-[“finished”, “🔴 Agotado”, “rgba(255,68,68,.1)”, “rgba(255,68,68,.4)”, “#ff8888”],
-].map(([val, label, bg, border, clr]) => (React.createElement(“button”, { key: val, onClick: () => setManualType(val), style: { flex: 1, background: manualType === val ? bg : “rgba(255,255,255,.03)”, border: `1px solid ${manualType === val ? border : "#1e1208"}`, borderRadius: 8, padding: “7px 4px”, cursor: “pointer”, color: manualType === val ? clr : “#6a5a4a”, fontSize: 10, fontWeight: manualType === val ? 700 : 400, transition: “all .2s” } }, label)))),
-React.createElement(“div”, { style: { marginBottom: 10 } },
-React.createElement(“div”, { style: { fontSize: 8, color: “#4a6a7a”, letterSpacing: 1, textTransform: “uppercase”, marginBottom: 4 } }, “Fecha”),
-React.createElement(“input”, { type: “date”, value: manualDate, onChange: e => { setManualDate(e.target.value); setManualErr(””); }, max: new Date().toISOString().split(“T”)[0], style: { width: “100%”, boxSizing: “border-box”, background: “rgba(255,255,255,.05)”, border: “1px solid #2a1e12”, borderRadius: 7, padding: “8px 10px”, color: “#f0e6d0”, fontSize: 12, outline: “none”, colorScheme: “dark” } })),
-(manualType === “arrived” || manualType === “retired”) && (React.createElement(“div”, { style: { marginBottom: 10 } },
-React.createElement(“div”, { style: { fontSize: 8, color: “#4a6a7a”, letterSpacing: 1, textTransform: “uppercase”, marginBottom: 4 } }, manualType === “arrived” ? “Cantidad que llegó” : “Cantidad retirada”),
-React.createElement(“input”, { type: “number”, value: manualQty, onChange: e => setManualQty(e.target.value), placeholder: `Ej: ${timelineItem.par}`, min: 1, style: { width: “100%”, boxSizing: “border-box”, background: “rgba(255,255,255,.05)”, border: “1px solid #2a1e12”, borderRadius: 7, padding: “8px 10px”, color: “#f0e6d0”, fontSize: 12, outline: “none” } }))),
-React.createElement(“div”, { style: { marginBottom: 12 } },
-React.createElement(“div”, { style: { fontSize: 8, color: “#4a6a7a”, letterSpacing: 1, textTransform: “uppercase”, marginBottom: 4 } }, “Nota (opcional)”),
-React.createElement(“input”, { type: “text”, value: manualNote, onChange: e => setManualNote(e.target.value), placeholder: “Ej: lleg\u00F3 con el pedido de Southern, evento especial…”, style: { width: “100%”, boxSizing: “border-box”, background: “rgba(255,255,255,.05)”, border: “1px solid #2a1e12”, borderRadius: 7, padding: “8px 10px”, color: “#f0e6d0”, fontSize: 11, outline: “none” } })),
-manualErr && React.createElement(“div”, { style: { color: “#ff6666”, fontSize: 10, marginBottom: 8, background: “rgba(255,68,68,.08)”, borderRadius: 6, padding: “4px 8px” } },
-“\u26A0\uFE0F “,
-manualErr),
-React.createElement(“button”, { onClick: addManualEntry, style: { width: “100%”, background: “#6eb5c8”, border: “none”, borderRadius: 8, padding: “9px”, color: “#06080a”, fontSize: 12, fontWeight: 700, cursor: “pointer” } }, “Guardar fecha”)),
-React.createElement(“div”, { style: { display: “grid”, gridTemplateColumns: “1fr 1fr 1fr”, gap: 6, marginBottom: 16 } },
-React.createElement(“button”, { onClick: () => { markArrived(timelineItem.id); const updated = inv.find(i => i.id === timelineItem.id); if (updated)
-setTimelineItem({ …updated }); }, style: { background: “rgba(68,204,136,.1)”, border: “1px solid rgba(68,204,136,.25)”, color: “#44cc88”, borderRadius: 8, padding: “8px 4px”, cursor: “pointer”, fontSize: 9, fontWeight: 600 } }, “\uD83D\uDCE6 Lleg\u00F3 hoy”),
-React.createElement(“button”, { onClick: () => { setTimelineItem(null); setRetireItem(timelineItem); setRetireQty(“1”); setRetireReason(””); }, style: { background: “rgba(255,170,0,.08)”, border: “1px solid rgba(255,170,0,.25)”, color: “#ffaa44”, borderRadius: 8, padding: “8px 4px”, cursor: “pointer”, fontSize: 9, fontWeight: 600 } }, “\uD83D\uDDD1\uFE0F Retirar hoy”),
-React.createElement(“button”, { onClick: () => { markFinished(timelineItem.id); const updated = inv.find(i => i.id === timelineItem.id); if (updated)
-setTimelineItem({ …updated }); }, style: { background: “rgba(255,68,68,.08)”, border: “1px solid rgba(255,68,68,.25)”, color: “#ff8888”, borderRadius: 8, padding: “8px 4px”, cursor: “pointer”, fontSize: 9, fontWeight: 600 } }, “\uD83D\uDD34 Agot\u00F3 hoy”)),
-React.createElement(“div”, { style: { fontSize: 9, letterSpacing: 2, color: “#6a5a4a”, textTransform: “uppercase”, marginBottom: 10 } }, “Historial de eventos”),
-(!timelineItem.history || timelineItem.history.length === 0)
-? React.createElement(“div”, { style: { textAlign: “center”, padding: “24px”, color: “#3a2a1a”, fontSize: 11, border: “1px dashed #2a1e12”, borderRadius: 10 } },
-“Sin eventos a\u00FAn.”,
-React.createElement(“br”, null),
-React.createElement(“span”, { style: { fontSize: 9, color: “#2a1a0a” } }, “Registra una fecha arriba para empezar a rastrear el patr\u00F3n.”))
-: React.createElement(“div”, { style: { position: “relative” } },
-React.createElement(“div”, { style: { position: “absolute”, left: 15, top: 0, bottom: 0, width: 2, background: “linear-gradient(180deg,#c8964e33,transparent)”, borderRadius: 1 } }),
-[…timelineItem.history].reverse().map((ev, i) => {
-const isArr = ev.type === “arrived”, isRet = ev.type === “retired”;
-const clr = isArr ? “#44cc88” : isRet ? “#ffaa44” : “#ff8888”;
-const bdr = isArr ? “rgba(68,204,136,.2)” : isRet ? “rgba(255,170,0,.2)” : “rgba(255,68,68,.12)”;
-const lbl = isArr ? “📦 Llegada” : isRet ? “🗑️ Retirado” : “🔴 Agotado”;
-return (React.createElement(“div”, { key: i, style: { display: “flex”, alignItems: “flex-start”, gap: 10, marginBottom: 10, position: “relative” } },
-React.createElement(“div”, { style: { width: 30, height: 30, borderRadius: “50%”, background: isArr ? “rgba(68,204,136,.18)” : isRet ? “rgba(255,170,0,.12)” : “rgba(255,68,68,.12)”, border: `2px solid ${clr}`, display: “flex”, alignItems: “center”, justifyContent: “center”, fontSize: 12, flexShrink: 0, zIndex: 1 } }, isArr ? “📦” : isRet ? “🗑️” : “🔴”),
-React.createElement(“div”, { style: { flex: 1, background: “rgba(255,255,255,.025)”, border: `1px solid ${bdr}`, borderRadius: 8, padding: “8px 11px” } },
-React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between”, alignItems: “flex-start”, gap: 8 } },
-React.createElement(“div”, { style: { fontSize: 11, fontWeight: 600, color: clr } },
-lbl,
-ev.manual && React.createElement(“span”, { style: { fontSize: 8, color: “#4a6a7a”, marginLeft: 5, fontWeight: 400 } }, “(manual)”)),
-React.createElement(“div”, { style: { fontSize: 9, color: “#c8964e”, fontWeight: 600, whiteSpace: “nowrap” } }, ev.date)),
-React.createElement(“div”, { style: { fontSize: 9, color: “#8a7a6a”, marginTop: 3 } },
-ev.ts && ev.ts !== “manual” && React.createElement(React.Fragment, null,
-React.createElement(“span”, { style: { color: “#5a6a7a” } }, ev.ts),
-“ \u00B7 “),
-“Por: “,
-React.createElement(“span”, { style: { color: “#c8d0d8” } }, ev.user),
-ev.qty ? React.createElement(React.Fragment, null,
-“ \u00B7 “,
-React.createElement(“span”, { style: { color: clr, fontWeight: 600 } }, ev.qty),
-“ unidad”,
-ev.qty !== 1 ? “es” : “”) : ev.stock !== undefined && isArr ? React.createElement(React.Fragment, null,
-“ \u00B7 Stock: “,
-React.createElement(“span”, { style: { color: “#44cc88”, fontWeight: 600 } }, ev.stock)) : “”),
-ev.note && React.createElement(“div”, { style: { fontSize: 9, color: “#7a8a6a”, marginTop: 3, fontStyle: “italic” } },
-“"”,
-ev.note,
-“"”))));
-})))))),
-retireItem && (React.createElement(“div”, { style: { position: “fixed”, inset: 0, background: “rgba(0,0,0,.88)”, zIndex: 300, display: “flex”, alignItems: “center”, justifyContent: “center”, padding: 16 }, onClick: () => setRetireItem(null) },
-React.createElement(“div”, { style: { background: “#100c06”, border: “1px solid #3a2a0a”, borderRadius: 14, width: “100%”, maxWidth: 380, boxShadow: “0 24px 70px rgba(0,0,0,.8)”, overflow: “hidden” }, onClick: e => e.stopPropagation() },
-React.createElement(“div”, { style: { background: “linear-gradient(135deg,rgba(255,170,0,.12),transparent)”, borderBottom: “1px solid rgba(255,170,0,.15)”, padding: “16px 18px”, display: “flex”, justifyContent: “space-between”, alignItems: “center” } },
-React.createElement(“div”, null,
-React.createElement(“div”, { style: { fontSize: 9, letterSpacing: 3, color: “#ffaa44”, textTransform: “uppercase”, marginBottom: 2 } }, “Registrar Retiro”),
-React.createElement(“div”, { style: { fontSize: 15, color: “#f0e6d0”, fontWeight: 500 } },
-retireItem.emoji,
-“ “,
-retireItem.name),
-React.createElement(“div”, { style: { fontSize: 9, color: “#8a7a6a”, marginTop: 1 } },
-“Stock actual: “,
-React.createElement(“span”, { style: { color: “#f0e6d0”, fontWeight: 600 } }, retireItem.stock),
-“ unidades”)),
-React.createElement(“button”, { onClick: () => setRetireItem(null), style: { background: “none”, border: “none”, color: “#6a5a4a”, cursor: “pointer”, fontSize: 18, lineHeight: 1 } }, “\u2715”)),
-React.createElement(“div”, { style: { padding: “16px 18px” } },
-React.createElement(“div”, { style: { marginBottom: 14 } },
-React.createElement(“div”, { style: { fontSize: 9, color: “#8a7a6a”, letterSpacing: 1, textTransform: “uppercase”, marginBottom: 5 } }, “Cantidad retirada”),
-React.createElement(“div”, { style: { display: “flex”, alignItems: “center”, gap: 8 } },
-React.createElement(“button”, { onClick: () => setRetireQty(q => String(Math.max(1, parseInt(q || 1) - 1))), style: { …S.mini, width: 28, height: 28, fontSize: 16 } }, “\u2212”),
-React.createElement(“input”, { type: “number”, value: retireQty, onChange: e => setRetireQty(e.target.value), min: 1, max: retireItem.stock, style: { flex: 1, background: “rgba(255,255,255,.06)”, border: “1px solid rgba(255,170,0,.3)”, borderRadius: 8, padding: “9px 12px”, color: “#f0e6d0”, fontSize: 16, fontWeight: 700, textAlign: “center”, outline: “none” } }),
-React.createElement(“button”, { onClick: () => setRetireQty(q => String(Math.min(retireItem.stock, parseInt(q || 1) + 1))), style: { …S.mini, width: 28, height: 28, fontSize: 16 } }, “+”)),
-React.createElement(“div”, { style: { fontSize: 9, color: “#6a5a4a”, marginTop: 5, textAlign: “center” } },
-“Stock restante: “,
-React.createElement(“span”, { style: { color: retireItem.stock - (parseInt(retireQty) || 1) <= retireItem.par ? “#ff8888” : “#f0e6d0”, fontWeight: 600 } }, Math.max(0, retireItem.stock - (parseInt(retireQty) || 1))),
-“ unidades”)),
-React.createElement(“div”, { style: { marginBottom: 16 } },
-React.createElement(“div”, { style: { fontSize: 9, color: “#8a7a6a”, letterSpacing: 1, textTransform: “uppercase”, marginBottom: 5 } },
-“Raz\u00F3n del retiro “,
-React.createElement(“span”, { style: { color: “#4a3a2a”, fontWeight: 400 } }, “(opcional)”)),
-React.createElement(“div”, { style: { display: “flex”, gap: 5, flexWrap: “wrap”, marginBottom: 8 } }, [“Vencido”, “Roto/dañado”, “Muestra”, “Consumo interno”, “Otro”].map(r => (React.createElement(“button”, { key: r, onClick: () => setRetireReason(r), style: { background: retireReason === r ? “rgba(255,170,0,.2)” : “rgba(255,255,255,.04)”, border: `1px solid ${retireReason === r ? "rgba(255,170,0,.4)" : "#2a1e12"}`, borderRadius: 20, padding: “3px 9px”, color: retireReason === r ? “#ffaa44” : “#6a5a4a”, fontSize: 9, cursor: “pointer”, fontWeight: retireReason === r ? 600 : 400 } }, r)))),
-React.createElement(“input”, { type: “text”, value: retireReason, onChange: e => setRetireReason(e.target.value), placeholder: “O escribe una raz\u00F3n…”, style: { …S.input, width: “100%”, boxSizing: “border-box”, fontSize: 11, padding: “6px 9px” } })),
-React.createElement(“div”, { style: { background: “rgba(255,170,0,.06)”, border: “1px solid rgba(255,170,0,.15)”, borderRadius: 8, padding: “9px 11px”, marginBottom: 14, fontSize: 9, color: “#8a7a6a”, lineHeight: 1.6 } },
-“\uD83D\uDDD1\uFE0F Esto reducir\u00E1 el stock en “,
-React.createElement(“span”, { style: { color: “#ffaa44”, fontWeight: 600 } }, parseInt(retireQty) || 1),
-“ unidad”,
-(parseInt(retireQty) || 1) !== 1 ? “es” : “”,
-“ y registrar\u00E1 la fecha de hoy (”,
-React.createElement(“span”, { style: { color: “#c8964e” } }, dateNow()),
-“) en el historial del producto.”),
-React.createElement(“div”, { style: { display: “grid”, gridTemplateColumns: “1fr 1fr”, gap: 8 } },
-React.createElement(“button”, { onClick: async () => {
-await markRetired(retireItem.id, parseInt(retireQty) || 1, retireReason);
-setRetireItem(null);
-}, style: { background: “rgba(255,170,0,.18)”, border: “1px solid rgba(255,170,0,.4)”, color: “#ffaa44”, borderRadius: 9, padding: “10px”, cursor: “pointer”, fontSize: 12, fontWeight: 700 } }, “\uD83D\uDDD1\uFE0F Confirmar retiro”),
-React.createElement(“button”, { onClick: () => setRetireItem(null), style: { background: “rgba(255,255,255,.04)”, border: “1px solid #2a1e12”, color: “#8a7a6a”, borderRadius: 9, padding: “10px”, cursor: “pointer”, fontSize: 12 } }, “Cancelar”)))))),
-React.createElement(“style”, null, `@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}} button:hover{opacity:.82} input::placeholder,textarea::placeholder{color:#3a4a5a} input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.6)}`)));
-}
-// ═══════════════════════════════════════════════════════════════════════════════
-// ADMIN APP
-// ═══════════════════════════════════════════════════════════════════════════════
-function AdminApp({ pin, adminUser, staff, isSuperAdmin, onPin, onAdminUser, onStaff, onLogout }) {
-const [tab, setTab] = useState(“live”);
-const [logs, setLogs] = useState([]);
-const [active, setActive] = useState({});
-const [inv, setInv] = useState([]);
-const [dists, setDists] = useState([]);
-const [loading, setLoading] = useState(true);
-const [filterUser, setFUser] = useState(“Todos”);
-const [filterType, setFType] = useState(“Todos”);
-// PIN change
-const [showPin, setShowPin] = useState(false);
-const [pUser, setPUser] = useState(””);
-const [pCur, setPCur] = useState(””);
-const [pNew, setPNew] = useState(””);
-const [pConf, setPConf] = useState(””);
-const [pErr, setPErr] = useState(””);
-const [pOk, setPOk] = useState(false);
-// Staff
-const [newSName, setNewSName] = useState(””);
-const [sErr, setSErr] = useState(””);
-// Shopping list
-const [thresh, setThresh] = useState(2);
-const [copied, setCopied] = useState(false);
-const pollRef = useRef(null);
-const refresh = useCallback(async () => {
-const [l, u, i, d] = await Promise.all([
-shGet(“lp:logs”, []),
-shGet(“lp:active”, {}),
-shGet(“lp:inventory”, INIT_INV),
-shGet(“lp:distributors”, INIT_DISTS),
-]);
-const now = Date.now();
-const fresh = Object.fromEntries(Object.entries(u).filter(([, v]) => now - v.lastSeen < 60000));
-setLogs(l);
-setActive(fresh);
-setInv(i);
-setDists(d);
-setLoading(false);
-}, []);
-useEffect(() => { refresh(); pollRef.current = setInterval(refresh, POLL_MS); return () => clearInterval(pollRef.current); }, [refresh]);
-// PIN / credential change
-const doChangePin = async () => {
-setPErr(””);
-setPOk(false);
-// Validate current PIN
-if (!pCur) {
-setPErr(“Escribe el PIN actual”);
-return;
-}
-if (pCur !== pin) {
-setPErr(`PIN incorrecto. El PIN actual es el que usaste para entrar.`);
-return;
-}
-// Need at least one change
-const hasNewUser = pUser.trim().length > 0;
-const hasNewPin = pNew.trim().length > 0;
-if (!hasNewUser && !hasNewPin) {
-setPErr(“Escribe un nuevo usuario y/o un nuevo PIN”);
-```
-     return;
-    }
-    if (hasNewUser && pUser.trim().length < 2) {
-        setPErr("El usuario debe tener al menos 2 caracteres");
-        return;
-    }
-    if (hasNewPin && pNew.length < 4) {
-        setPErr("El PIN debe tener al menos 4 caracteres");
-        return;
-    }
-    if (hasNewPin && pNew !== pConf) {
-        setPErr("Los PINs nuevos no coinciden");
-        return;
-    }
-    // Apply changes
-    if (hasNewPin)
-        await onPin(pNew.trim());
-    if (hasNewUser)
-        await onAdminUser(pUser.trim());
-    setPOk(true);
-    setPCur("");
-    setPNew("");
-    setPConf("");
-    setPUser("");
-    setTimeout(() => { setShowPin(false); setPOk(false); }, 2000);
-};
-// Staff handlers
-const addStaff = () => {
-    const n = newSName.trim();
-    setSErr("");
-    if (!n) {
-        setSErr("Escribe un nombre");
-        return;
-    }
-    if (staff.find(s => s.toLowerCase() === n.toLowerCase())) {
-        setSErr("Ese nombre ya existe");
-        return;
-    }
-    onStaff([...staff, n]);
-    setNewSName("");
-};
-const removeStaff = n => onStaff(staff.filter(s => s !== n));
-// Computed
-const activeArr = Object.values(active);
-const tStock = inv.reduce((a, b) => a + b.stock, 0);
-const crits = inv.filter(i => i.stock <= i.par);
-const nLow = inv.filter(i => i.stock <= i.par * 2).length;
-const todayLogs = logs.filter(l => l.date === dateNow());
-const addCount = todayLogs.filter(l => l.type === ACT.ADD).length;
-const delCount = todayLogs.filter(l => l.type === ACT.DEL).length;
-const adjCount = todayLogs.filter(l => l.type === ACT.STOCK || l.type === ACT.BACKUP).length;
-const allUsers = ["Todos", ...new Set(logs.map(l => l.user))];
-const allTypes = ["Todos", ...Object.keys(ACT)];
-const filtLogs = logs.filter(l => (filterUser === "Todos" || l.user === filterUser) && (filterType === "Todos" || l.type === filterType));
-// Shopping list
-const needsList = inv.filter(i => i.stock < thresh);
-const byDist = dists.map(d => ({ dist: d, items: needsList.filter(i => i.distId === d.id) })).filter(g => g.items.length > 0);
-const unassigned = needsList.filter(i => !i.distId || !dists.find(d => d.id === i.distId));
-const buildText = () => {
-    const lines = [`📋 LISTA DE COMPRAS — ${dateNow()}`, `Stock menor a ${thresh} unidades`, "─".repeat(40)];
-    byDist.forEach(({ dist, items }) => {
-        lines.push(`\n🏢 ${dist.name.toUpperCase()}`);
-        lines.push(`   📞 ${dist.phone}  ✉️ ${dist.email}`);
-        if (dist.rep)
-            lines.push(`   Rep: ${dist.rep}${dist.repPhone ? ` · ${dist.repPhone}` : ""}`);
-        lines.push(`   ${"─".repeat(30)}`);
-        items.forEach(i => { const need = Math.max(0, thresh - i.stock); lines.push(`   ${i.emoji} ${i.name} (${i.unit})`); lines.push(`      Stock: ${i.stock} | Min: ${i.par} | Pedir: +${need}`); });
-    });
-    if (unassigned.length > 0) {
-        lines.push("\n⚠️ SIN DISTRIBUIDORA");
-        unassigned.forEach(i => lines.push(`   ${i.emoji} ${i.name} — Stock: ${i.stock}`));
-    }
-    lines.push(`\n${"─".repeat(40)}\nTotal: ${needsList.length} productos a reponer`);
-    return lines.join("\n");
-};
-const doCopy = () => { navigator.clipboard.writeText(buildText()).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2500); }); };
-const doEmail = () => { window.open(`mailto:?subject=${encodeURIComponent("Lista de Compras — " + dateNow())}&body=${encodeURIComponent(buildText())}`); };
-const stStatus = it => it.stock <= it.par ? { c: "#ff4444", l: "CRITICO" } : it.stock <= it.par * 2 ? { c: "#ffaa00", l: "BAJO" } : { c: "#44cc88", l: "OK" };
-return (React.createElement("div", { style: { minHeight: "100vh", background: "linear-gradient(135deg,#06080a,#0a0d12,#06080a)", fontFamily: "Georgia", color: "#e0eaf0", paddingBottom: 60 } },
-    React.createElement("div", { style: { background: "linear-gradient(180deg,#0a1520,transparent)", borderBottom: "1px solid #1a2a3a", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 } },
-        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
-            React.createElement("div", null,
-                React.createElement("div", { style: { fontSize: 9, letterSpacing: 4, color: "#6eb5c8", textTransform: "uppercase" } }, "Panel de Control"),
-                React.createElement("div", { style: { fontSize: 18, fontWeight: 400, letterSpacing: 2 } }, "\uD83D\uDD10 Admin \u2014 LicorPro")),
-            isSuperAdmin
-                ? React.createElement("div", { style: { background: "linear-gradient(135deg,rgba(200,150,78,.2),rgba(200,150,78,.1))", border: "1px solid rgba(200,150,78,.5)", borderRadius: 20, padding: "4px 12px", fontSize: 10, color: "#c8964e", fontWeight: 700, display: "flex", alignItems: "center", gap: 5 } },
-                    "\uD83D\uDC51 ",
-                    adminUser)
-                : React.createElement("div", { style: { background: "rgba(110,181,200,.08)", border: "1px solid rgba(110,181,200,.2)", borderRadius: 20, padding: "4px 10px", fontSize: 10, color: "#6eb5c8" } },
-                    "\uD83D\uDD10 ",
-                    adminUser || "Admin"),
-            activeArr.length > 0 && React.createElement("div", { style: { background: "rgba(68,204,136,.12)", border: "1px solid rgba(68,204,136,.3)", borderRadius: 20, padding: "3px 10px", fontSize: 10, color: "#44cc88", display: "flex", alignItems: "center", gap: 5 } },
-                React.createElement("span", { style: { width: 6, height: 6, borderRadius: "50%", background: "#44cc88", display: "inline-block", animation: "pulse 1.5s infinite" } }),
-                "\uD83D\uDFE2 ",
-                activeArr.length,
-                " en l\u00EDnea")),
-        React.createElement("div", { style: { display: "flex", gap: 4, background: "rgba(0,0,0,.3)", borderRadius: 9, padding: 3, border: "1px solid #1a2a3a", flexWrap: "wrap" } }, [["live", "🟢 En Vivo"], ["shopping", "🛒 Compras"], ["log", "📜 Historial"], ["inventory", "📦 Inventario"], ["staff", "👥 Empleados"]].map(([t, l]) => (React.createElement("button", { key: t, onClick: () => setTab(t), style: { background: tab === t ? "#6eb5c8" : "transparent", border: "none", borderRadius: 6, padding: "5px 11px", color: tab === t ? "#06080a" : "#6a8a9a", fontSize: 10, cursor: "pointer", fontWeight: tab === t ? 700 : 400, whiteSpace: "nowrap" } }, l)))),
-        React.createElement("div", { style: { display: "flex", gap: 6 } },
-            React.createElement("button", { onClick: refresh, style: S.btn("#1a2a3a", "#6eb5c8") }, "\u21BB"),
-            React.createElement("button", { onClick: () => { setShowPin(true); setPErr(""); setPOk(false); setPUser(""); setPCur(""); setPNew(""); setPConf(""); }, style: S.btn("#1a2a3a", "#c8964e") }, "\uD83D\uDD10 Credenciales"),
-            React.createElement("button", { onClick: onLogout, style: S.btn("#1a2a3a", "#8a9aaa") }, "Salir"))),
-    loading && React.createElement("div", { style: { textAlign: "center", padding: "60px", color: "#6eb5c8", fontSize: 13 } }, "\u23F3 Cargando..."),
-    !loading && (React.createElement("div", null,
-        tab === "live" && (React.createElement("div", { style: { padding: "16px 24px" } },
-            React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(140px,1fr))", gap: 9, marginBottom: 18 } }, [{ l: "En Línea", v: activeArr.length, c: "#44cc88", i: "🟢" }, { l: "Stock Total", v: tStock, c: "#6eb5c8", i: "📦" }, { l: "Crítico", v: crits.length, c: crits.length > 0 ? "#ff4444" : "#44cc88", i: "⚠️" }, { l: "Bajo Mínimo", v: nLow, c: nLow > 0 ? "#ffaa00" : "#44cc88", i: "📉" }, { l: "Añadidos Hoy", v: addCount, c: "#44cc88", i: "➕" }, { l: "Eliminados Hoy", v: delCount, c: delCount > 0 ? "#ff6666" : "#4a5a6a", i: "➖" }, { l: "Ajustes Hoy", v: adjCount, c: "#c8964e", i: "✏️" }, { l: "Cambios Hoy", v: todayLogs.length, c: "#6e8ec8", i: "📋" }].map((s, i) => (React.createElement("div", { key: i, style: { background: "rgba(255,255,255,.025)", border: "1px solid #1a2a3a", borderRadius: 9, padding: "12px 14px" } },
-                React.createElement("div", { style: { fontSize: 8, color: "#4a6a7a", letterSpacing: 1, textTransform: "uppercase" } },
-                    s.i,
-                    " ",
-                    s.l),
-                React.createElement("div", { style: { fontSize: 26, fontWeight: 700, color: s.c, lineHeight: 1.1, marginTop: 3 } }, s.v))))),
-            React.createElement("div", { style: { marginBottom: 18 } },
-                React.createElement("div", { style: { fontSize: 9, letterSpacing: 3, color: "#4a6a7a", textTransform: "uppercase", marginBottom: 10 } }, "Usuarios Activos"),
-                activeArr.length === 0
-                    ? React.createElement("div", { style: { background: "rgba(255,255,255,.02)", border: "1px solid #1a2a3a", borderRadius: 10, padding: "24px", textAlign: "center", color: "#2a4a5a", fontSize: 11 } }, "Nadie conectado")
-                    : React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, activeArr.map(u => (React.createElement("div", { key: u.name, style: { background: "rgba(68,204,136,.08)", border: "1px solid rgba(68,204,136,.25)", borderRadius: 10, padding: "10px 16px", display: "flex", alignItems: "center", gap: 8 } },
-                        React.createElement("div", { style: { width: 8, height: 8, borderRadius: "50%", background: "#44cc88", animation: "pulse 1.5s infinite" } }),
-                        React.createElement("div", null,
-                            React.createElement("div", { style: { fontSize: 12, fontWeight: 600, color: "#e0eaf0" } }, u.name),
-                            React.createElement("div", { style: { fontSize: 8, color: "#4a8a6a" } },
-                                "hace ",
-                                Math.round((Date.now() - u.lastSeen) / 1000),
-                                "s"))))))),
-            crits.length > 0 && React.createElement("div", { style: { background: "rgba(255,68,68,.06)", border: "1px solid rgba(255,68,68,.3)", borderRadius: 10, padding: "12px 16px", marginBottom: 18 } },
-                React.createElement("div", { style: { fontSize: 8, color: "#ff6666", letterSpacing: 2, marginBottom: 6 } }, "INVENTARIO CRITICO"),
-                React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 6 } }, crits.map(i => React.createElement("div", { key: i.id, style: { background: "rgba(255,68,68,.1)", borderRadius: 7, padding: "6px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" } },
-                    React.createElement("span", { style: { fontSize: 10, color: "#f0c8c8" } },
-                        i.emoji,
-                        " ",
-                        i.name),
-                    React.createElement("span", { style: { fontSize: 10, fontWeight: 700, color: "#ff6666" } },
-                        "Stock:",
-                        i.stock,
-                        "/Min:",
-                        i.par))))),
-            React.createElement("div", { style: { fontSize: 9, letterSpacing: 3, color: "#4a6a7a", textTransform: "uppercase", marginBottom: 10 } }, "Actividad Reciente"),
-            React.createElement("div", { style: { background: "rgba(255,255,255,.02)", border: "1px solid #1a2a3a", borderRadius: 11, overflow: "hidden", maxHeight: 340, overflowY: "auto" } },
-                logs.slice(0, 30).map((l, i) => (React.createElement("div", { key: i, style: { display: "grid", gridTemplateColumns: "90px 80px 100px 1fr", padding: "8px 14px", borderBottom: i < 29 ? "1px solid #0d1a22" : "none", alignItems: "center", gap: 8, background: i % 2 === 0 ? "rgba(255,255,255,.01)" : "transparent" } },
-                    React.createElement("div", { style: { fontSize: 8, color: "#3a5a6a" } }, l.date),
-                    React.createElement("div", { style: { fontSize: 8, color: "#3a6a8a" } }, l.ts),
-                    React.createElement("div", null,
-                        React.createElement("span", { style: { background: "rgba(110,181,200,.1)", border: "1px solid rgba(110,181,200,.2)", borderRadius: 10, padding: "1px 7px", fontSize: 8, color: "#6eb5c8" } }, l.user)),
-                    React.createElement("div", null,
-                        React.createElement("span", { style: { background: `${ACT_CLR[l.type] || "#888"}18`, border: `1px solid ${ACT_CLR[l.type] || "#888"}33`, color: ACT_CLR[l.type] || "#888", borderRadius: 10, padding: "1px 6px", fontSize: 7, fontWeight: 700, marginRight: 5 } }, ACT_LBL[l.type] || l.type),
-                        React.createElement("span", { style: { fontSize: 9, color: "#7a8a9a" } },
-                            l.item !== "—" && React.createElement("b", { style: { color: "#c8d4e0" } }, l.item),
-                            l.detail && l.detail !== l.item ? React.createElement(React.Fragment, null,
-                                " \u2014 ",
-                                l.detail) : ""))))),
-                logs.length === 0 && React.createElement("div", { style: { textAlign: "center", padding: "32px", color: "#2a3a4a", fontSize: 11 } }, "Sin actividad a\u00FAn")))),
-        tab === "shopping" && (React.createElement("div", { style: { padding: "20px 24px" } },
-            React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 20 } },
-                React.createElement("div", null,
-                    React.createElement("div", { style: { fontSize: 9, letterSpacing: 3, color: "#4a6a7a", textTransform: "uppercase", marginBottom: 4 } }, "Lista Autom\u00E1tica de Compras"),
-                    React.createElement("div", { style: { fontSize: 11, color: "#6a8a9a" } }, "Productos con stock por debajo del l\u00EDmite \u2014 tiempo real")),
-                React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" } },
-                    React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 7, background: "rgba(255,255,255,.03)", border: "1px solid #1a2a3a", borderRadius: 9, padding: "6px 12px" } },
-                        React.createElement("span", { style: { fontSize: 9, color: "#4a6a7a", textTransform: "uppercase", letterSpacing: 1 } }, "L\u00EDmite"),
-                        React.createElement("button", { onClick: () => setThresh(t => Math.max(1, t - 1)), style: S.miniD }, "\u2212"),
-                        React.createElement("span", { style: { fontSize: 15, fontWeight: 700, color: "#ff6666", minWidth: 24, textAlign: "center" } }, thresh),
-                        React.createElement("button", { onClick: () => setThresh(t => t + 1), style: S.miniD }, "+"),
-                        React.createElement("span", { style: { fontSize: 9, color: "#4a6a7a" } }, "unidades")),
-                    React.createElement("button", { onClick: doCopy, style: { ...S.btn(copied ? "#44cc88" : "#1a3a4a", copied ? "#06080a" : "#6eb5c8"), fontSize: 11 } }, copied ? "✅ Copiado" : "📋 Copiar"),
-                    React.createElement("button", { onClick: doEmail, style: { ...S.btn("#1a2540", "#6e8ec8"), fontSize: 11 } }, "\u2709\uFE0F Email"),
-                    React.createElement("button", { onClick: refresh, style: { ...S.btn("#1a2a3a", "#6eb5c8"), fontSize: 11 } }, "\u21BB"))),
-            needsList.length === 0
-                ? React.createElement("div", { style: { background: "rgba(68,204,136,.06)", border: "1px solid rgba(68,204,136,.2)", borderRadius: 14, padding: "48px", textAlign: "center" } },
-                    React.createElement("div", { style: { fontSize: 36, marginBottom: 10 } }, "\u2705"),
-                    React.createElement("div", { style: { fontSize: 14, color: "#44cc88", fontWeight: 600 } }, "Todo el inventario est\u00E1 bien surtido"),
-                    React.createElement("div", { style: { fontSize: 10, color: "#3a6a4a", marginTop: 4 } },
-                        "Ning\u00FAn producto con stock menor a ",
-                        thresh))
-                : (React.createElement("div", null,
-                    React.createElement("div", { style: { background: "rgba(255,68,68,.07)", border: "1px solid rgba(255,68,68,.25)", borderRadius: 11, padding: "12px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" } },
-                        React.createElement("div", { style: { fontSize: 28, fontWeight: 700, color: "#ff5555" } }, needsList.length),
-                        React.createElement("div", null,
-                            React.createElement("div", { style: { fontSize: 11, color: "#f0c8c8", fontWeight: 600 } },
-                                "producto",
-                                needsList.length !== 1 ? "s" : "",
-                                " necesitan reposici\u00F3n"),
-                            React.createElement("div", { style: { fontSize: 9, color: "#7a4a4a" } },
-                                "Stock bajo ",
-                                thresh,
-                                " unidades \u00B7 ",
-                                byDist.length,
-                                " distribuidora",
-                                byDist.length !== 1 ? "s" : "")),
-                        React.createElement("div", { style: { marginLeft: "auto", fontSize: 9, color: "#4a2a2a" } }, dateNow())),
-                    React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } },
-                        byDist.map(({ dist, items }) => (React.createElement("div", { key: dist.id, style: { background: "rgba(255,255,255,.02)", border: `1px solid ${dist.color}33`, borderRadius: 12, overflow: "hidden" } },
-                            React.createElement("div", { style: { background: `linear-gradient(135deg,${dist.color}20,transparent)`, borderBottom: `1px solid ${dist.color}22`, padding: "11px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 } },
-                                React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
-                                    React.createElement("div", { style: { width: 10, height: 10, borderRadius: "50%", background: dist.color } }),
-                                    React.createElement("div", null,
-                                        React.createElement("div", { style: { fontSize: 12, fontWeight: 700, color: "#e0eaf0" } }, dist.name),
-                                        React.createElement("div", { style: { fontSize: 9, color: "#4a6a7a" } },
-                                            items.length,
-                                            " producto",
-                                            items.length !== 1 ? "s" : "",
-                                            " \u00B7 Rep: ",
-                                            dist.rep || "—"))),
-                                React.createElement("div", { style: { display: "flex", gap: 6 } },
-                                    React.createElement("a", { href: `tel:${dist.phone}`, style: { background: `${dist.color}22`, border: `1px solid ${dist.color}44`, color: dist.color, borderRadius: 6, padding: "4px 10px", fontSize: 9, fontWeight: 600, textDecoration: "none" } },
-                                        "\uD83D\uDCDE ",
-                                        dist.phone),
-                                    React.createElement("a", { href: `mailto:${dist.email}?subject=${encodeURIComponent("Pedido Urgente " + dateNow())}&body=${encodeURIComponent("Hola " + dist.rep + ",\n\nNecesitamos reponer:\n\n" + items.map(i => `• ${i.name} (${i.unit}) — Stock: ${i.stock}, pedir: +${Math.max(0, thresh - i.stock)}`).join("\n") + "\n\nGracias.")}`, style: { background: "rgba(110,181,200,.12)", border: "1px solid rgba(110,181,200,.3)", color: "#6eb5c8", borderRadius: 6, padding: "4px 10px", fontSize: 9, fontWeight: 600, textDecoration: "none" } }, "\u2709\uFE0F Email pedido"))),
-                            React.createElement("div", null, items.map((it, idx) => {
-                                const need = Math.max(1, thresh - it.stock);
-                                const pct = Math.min(100, (it.stock / thresh) * 100);
-                                return (React.createElement("div", { key: it.id, style: { display: "grid", gridTemplateColumns: "auto 1fr auto auto auto", padding: "10px 16px", borderBottom: idx < items.length - 1 ? "1px solid #0d1a22" : "none", alignItems: "center", gap: 12, background: it.stock === 0 ? "rgba(255,30,30,.06)" : "transparent" } },
-                                    React.createElement("span", { style: { fontSize: 20 } }, it.emoji),
-                                    React.createElement("div", null,
-                                        React.createElement("div", { style: { fontSize: 11, color: "#d0dce8", fontWeight: 500 } }, it.name),
-                                        React.createElement("div", { style: { fontSize: 8, color: CAT_CLR[it.category] || "#5a6a7a" } },
-                                            it.category,
-                                            " \u00B7 ",
-                                            it.unit),
-                                        React.createElement("div", { style: { marginTop: 4, height: 3, background: "#1a2a3a", borderRadius: 3, width: 120, overflow: "hidden" } },
-                                            React.createElement("div", { style: { height: "100%", width: `${pct}%`, background: it.stock === 0 ? "#ff3333" : it.stock < thresh / 2 ? "#ff7700" : "#ffaa00", borderRadius: 3 } }))),
-                                    React.createElement("div", { style: { textAlign: "center" } },
-                                        React.createElement("div", { style: { fontSize: 7, color: "#3a5a6a", marginBottom: 1 } }, "STOCK"),
-                                        React.createElement("div", { style: { fontSize: 16, fontWeight: 700, color: it.stock === 0 ? "#ff3333" : "#ff7700" } }, it.stock)),
-                                    React.createElement("div", { style: { textAlign: "center" } },
-                                        React.createElement("div", { style: { fontSize: 7, color: "#3a5a6a", marginBottom: 1 } }, "M\u00CDNIMO"),
-                                        React.createElement("div", { style: { fontSize: 13, color: "#8a9aaa" } }, it.par)),
-                                    React.createElement("div", { style: { textAlign: "center", minWidth: 60 } },
-                                        React.createElement("div", { style: { fontSize: 7, color: "#3a5a6a", marginBottom: 1 } }, "PEDIR"),
-                                        React.createElement("div", { style: { background: "rgba(255,100,100,.15)", border: "1px solid rgba(255,100,100,.3)", borderRadius: 6, padding: "3px 10px", fontSize: 13, fontWeight: 700, color: "#ff8888" } },
-                                            "+",
-                                            need))));
-                            }))))),
-                        unassigned.length > 0 && (React.createElement("div", { style: { background: "rgba(255,255,255,.02)", border: "1px solid #2a2a1a", borderRadius: 12, overflow: "hidden" } },
-                            React.createElement("div", { style: { background: "rgba(200,150,50,.1)", borderBottom: "1px solid rgba(200,150,50,.2)", padding: "11px 16px" } },
-                                React.createElement("div", { style: { fontSize: 11, fontWeight: 700, color: "#c8964e" } }, "\u26A0\uFE0F Sin distribuidora asignada")),
-                            unassigned.map((it, idx) => (React.createElement("div", { key: it.id, style: { display: "grid", gridTemplateColumns: "auto 1fr auto auto", padding: "9px 16px", borderBottom: idx < unassigned.length - 1 ? "1px solid #1a1a0a" : "none", alignItems: "center", gap: 12 } },
-                                React.createElement("span", { style: { fontSize: 18 } }, it.emoji),
-                                React.createElement("div", null,
-                                    React.createElement("div", { style: { fontSize: 11, color: "#c8b88a" } }, it.name),
-                                    React.createElement("div", { style: { fontSize: 8, color: "#6a5a3a" } },
-                                        it.category,
-                                        " \u00B7 ",
-                                        it.unit)),
-                                React.createElement("div", { style: { textAlign: "center" } },
-                                    React.createElement("div", { style: { fontSize: 7, color: "#5a4a2a", marginBottom: 1 } }, "STOCK"),
-                                    React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: "#ff7700" } }, it.stock)),
-                                React.createElement("div", { style: { textAlign: "center", minWidth: 56 } },
-                                    React.createElement("div", { style: { fontSize: 7, color: "#5a4a2a", marginBottom: 1 } }, "PEDIR"),
-                                    React.createElement("div", { style: { background: "rgba(200,150,50,.15)", border: "1px solid rgba(200,150,50,.3)", borderRadius: 6, padding: "2px 8px", fontSize: 12, fontWeight: 700, color: "#c8a060" } },
-                                        "+",
-                                        Math.max(1, thresh - it.stock))))))))))))),
-        tab === "log" && (React.createElement("div", { style: { padding: "16px 24px" } },
-            React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 } },
-                React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" } },
-                    React.createElement("span", { style: { fontSize: 9, color: "#4a6a7a" } }, "Usuario:"),
-                    React.createElement("select", { value: filterUser, onChange: e => setFUser(e.target.value), style: { ...S.inputD, padding: "4px 8px", fontSize: 10 } }, allUsers.map(u => React.createElement("option", { key: u, value: u }, u))),
-                    React.createElement("span", { style: { fontSize: 9, color: "#4a6a7a" } }, "Tipo:"),
-                    React.createElement("select", { value: filterType, onChange: e => setFType(e.target.value), style: { ...S.inputD, padding: "4px 8px", fontSize: 10 } }, allTypes.map(t => React.createElement("option", { key: t, value: t }, t === "Todos" ? t : ACT_LBL[t] || t))),
-                    React.createElement("span", { style: { fontSize: 9, color: "#4a6a7a" } },
-                        filtLogs.length,
-                        " entradas")),
-                React.createElement("button", { onClick: async () => { await shSet("lp:logs", []); setLogs([]); }, style: { ...S.btn("#3a1010", "#ff6666"), fontSize: 10 } }, "\uD83D\uDDD1\uFE0F Limpiar")),
-            React.createElement("div", { style: { background: "rgba(255,255,255,.02)", border: "1px solid #1a2a3a", borderRadius: 11, overflow: "hidden" } },
-                React.createElement("div", { style: { display: "grid", gridTemplateColumns: "90px 80px 100px 1fr 1fr", padding: "7px 14px", fontSize: 7, color: "#3a5a6a", letterSpacing: 1.5, textTransform: "uppercase", borderBottom: "1px solid #1a2a3a", background: "#060c12" } },
-                    React.createElement("div", null, "Fecha"),
-                    React.createElement("div", null, "Hora"),
-                    React.createElement("div", null, "Usuario"),
-                    React.createElement("div", null, "Accion"),
-                    React.createElement("div", null, "Detalle")),
-                React.createElement("div", { style: { maxHeight: 520, overflowY: "auto" } },
-                    filtLogs.map((l, i) => (React.createElement("div", { key: i, style: { display: "grid", gridTemplateColumns: "90px 80px 100px 1fr 1fr", padding: "7px 14px", borderBottom: i < filtLogs.length - 1 ? "1px solid #0d1a22" : "none", alignItems: "center", gap: 6, background: i % 2 === 0 ? "rgba(255,255,255,.01)" : "transparent" } },
-                        React.createElement("div", { style: { fontSize: 8, color: "#3a5a6a" } }, l.date),
-                        React.createElement("div", { style: { fontSize: 8, color: "#3a6a8a" } }, l.ts),
-                        React.createElement("div", null,
-                            React.createElement("span", { style: { background: "rgba(110,181,200,.08)", border: "1px solid rgba(110,181,200,.15)", borderRadius: 10, padding: "1px 6px", fontSize: 8, color: "#6eb5c8" } }, l.user)),
-                        React.createElement("div", null,
-                            React.createElement("span", { style: { background: `${ACT_CLR[l.type] || "#888"}18`, border: `1px solid ${ACT_CLR[l.type] || "#888"}30`, color: ACT_CLR[l.type] || "#888", borderRadius: 10, padding: "1px 6px", fontSize: 7, fontWeight: 700 } }, ACT_LBL[l.type] || l.type)),
-                        React.createElement("div", { style: { fontSize: 9, color: "#7a8a9a" } },
-                            l.item !== "—" && React.createElement("b", { style: { color: "#b0c0d0" } }, l.item),
-                            l.detail && l.detail !== l.item ? React.createElement(React.Fragment, null,
-                                " \u2014 ",
-                                l.detail) : "")))),
-                    filtLogs.length === 0 && React.createElement("div", { style: { textAlign: "center", padding: "32px", color: "#2a3a4a", fontSize: 11 } }, "Sin registros"))))),
-        tab === "inventory" && (React.createElement("div", { style: { padding: "16px 24px" } },
-            React.createElement("div", { style: { fontSize: 9, color: "#4a6a7a", marginBottom: 12 } },
-                "Solo lectura \u2014 ",
-                inv.length,
-                " productos"),
-            React.createElement("div", { style: { background: "rgba(255,255,255,.02)", border: "1px solid #1a2a3a", borderRadius: 11, overflow: "hidden" } },
-                React.createElement("div", { style: { display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr", padding: "7px 14px", fontSize: 7, color: "#3a5a6a", letterSpacing: 1.5, textTransform: "uppercase", borderBottom: "1px solid #1a2a3a", background: "#060c12" } },
-                    React.createElement("div", null, "Producto"),
-                    React.createElement("div", { style: { textAlign: "center" } }, "Stock"),
-                    React.createElement("div", { style: { textAlign: "center" } }, "Backup"),
-                    React.createElement("div", { style: { textAlign: "center" } }, "Min"),
-                    React.createElement("div", { style: { textAlign: "center" } }, "Vel"),
-                    React.createElement("div", { style: { textAlign: "center" } }, "Estado")),
-                React.createElement("div", { style: { maxHeight: 560, overflowY: "auto" } }, inv.map((it, idx) => {
-                    const st = stStatus(it);
-                    return (React.createElement("div", { key: it.id, style: { display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr", padding: "8px 14px", borderBottom: idx < inv.length - 1 ? "1px solid #0d1a22" : "none", alignItems: "center", background: it.stock <= it.par ? "rgba(255,68,68,.025)" : idx % 2 === 0 ? "rgba(255,255,255,.01)" : "transparent" } },
-                        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 7 } },
-                            React.createElement("span", { style: { fontSize: 16 } }, it.emoji),
-                            React.createElement("div", null,
-                                React.createElement("div", { style: { fontSize: 11, color: "#d0dce8" } }, it.name),
-                                React.createElement("div", { style: { fontSize: 8, color: CAT_CLR[it.category] || "#6a7a8a" } },
-                                    it.category,
-                                    " \u00B7 ",
-                                    it.unit))),
-                        React.createElement("div", { style: { textAlign: "center", fontSize: 13, fontWeight: 700, color: st.c } }, it.stock),
-                        React.createElement("div", { style: { textAlign: "center", fontSize: 12, color: "#6e8ec8" } }, it.backup),
-                        React.createElement("div", { style: { textAlign: "center", fontSize: 11, color: "#8a9aaa" } }, it.par),
-                        React.createElement("div", { style: { textAlign: "center", fontSize: 10, color: it.trend === "up" ? "#44cc88" : it.trend === "down" ? "#ff6666" : "#c8964e" } },
-                            it.trend === "up" ? "↗" : it.trend === "down" ? "↘" : "→",
-                            " ",
-                            it.velocity),
-                        React.createElement("div", { style: { textAlign: "center" } },
-                            React.createElement("span", { style: { background: `${st.c}22`, border: `1px solid ${st.c}55`, color: st.c, borderRadius: 20, padding: "1px 6px", fontSize: 7, fontWeight: 700 } }, st.l))));
-                }))))),
-        tab === "staff" && (React.createElement("div", { style: { padding: "20px 24px", maxWidth: 680 } },
-            React.createElement("div", { style: { background: staff.length > 0 ? "rgba(68,204,136,.07)" : "rgba(200,150,78,.07)", border: `1px solid ${staff.length > 0 ? "rgba(68,204,136,.25)" : "rgba(200,150,78,.25)"}`, borderRadius: 11, padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" } },
-                React.createElement("div", null,
-                    React.createElement("div", { style: { fontSize: 10, fontWeight: 600, color: staff.length > 0 ? "#44cc88" : "#c8964e", marginBottom: 2 } }, staff.length > 0 ? `🔒 Lista activa — ${staff.length} empleado${staff.length !== 1 ? "s" : ""} autorizado${staff.length !== 1 ? "s" : ""}` : "🔓 Sin restricción — cualquier nombre puede entrar"),
-                    React.createElement("div", { style: { fontSize: 9, color: "#4a6a7a" } }, staff.length > 0 ? "Solo los nombres en esta lista pueden acceder." : "Agrega al menos un empleado para activar la restricción.")),
-                staff.length > 0 && React.createElement("button", { onClick: () => onStaff([]), style: { background: "rgba(255,68,68,.1)", border: "1px solid rgba(255,68,68,.3)", color: "#ff7777", borderRadius: 7, padding: "5px 12px", cursor: "pointer", fontSize: 10, fontWeight: 600 } }, "\uD83D\uDD13 Quitar restricci\u00F3n")),
-            React.createElement("div", { style: { background: "rgba(255,255,255,.02)", border: "1px solid #1a2a3a", borderRadius: 11, padding: "18px 20px", marginBottom: 16 } },
-                React.createElement("div", { style: { fontSize: 9, letterSpacing: 2, color: "#4a6a7a", textTransform: "uppercase", marginBottom: 12 } }, "A\u00F1adir Empleado"),
-                React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" } },
-                    React.createElement("input", { value: newSName, onChange: e => { setNewSName(e.target.value); setSErr(""); }, onKeyDown: e => e.key === "Enter" && addStaff(), placeholder: "Nombre del empleado...", style: { ...S.inputD, flex: 1, minWidth: 180, border: `1px solid ${sErr ? "#ff4444" : "#1a2a3a"}` }, autoFocus: true }),
-                    React.createElement("button", { onClick: addStaff, style: { ...S.btn("#44cc88", "#06080a"), fontSize: 12, padding: "9px 18px" } }, "+ A\u00F1adir")),
-                sErr && React.createElement("div", { style: { color: "#ff6666", fontSize: 10, marginTop: 6 } },
-                    "\u26A0\uFE0F ",
-                    sErr)),
-            staff.length === 0
-                ? React.createElement("div", { style: { background: "rgba(255,255,255,.015)", border: "1px dashed #1a2a3a", borderRadius: 11, padding: "36px", textAlign: "center", color: "#2a4a5a" } },
-                    React.createElement("div", { style: { fontSize: 28, marginBottom: 8 } }, "\uD83D\uDC65"),
-                    React.createElement("div", { style: { fontSize: 12 } }, "No hay empleados registrados"))
-                : React.createElement("div", { style: { background: "rgba(255,255,255,.02)", border: "1px solid #1a2a3a", borderRadius: 11, overflow: "hidden" } },
-                    React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr auto auto", padding: "8px 16px", fontSize: 7, color: "#3a5a6a", letterSpacing: 1.5, textTransform: "uppercase", borderBottom: "1px solid #1a2a3a", background: "#060c12" } },
-                        React.createElement("div", null, "Empleado"),
-                        React.createElement("div", { style: { textAlign: "center", paddingRight: 8 } }, "\u00DAltimo acceso"),
-                        React.createElement("div", { style: { textAlign: "center" } }, "Acci\u00F3n")),
-                    staff.map((name, idx) => {
-                        const lastLog = logs.find(l => l.user.toLowerCase() === name.toLowerCase() && l.type === ACT.LOGIN);
-                        const isOnline = Object.values(active).some(u => u.name.toLowerCase() === name.toLowerCase());
-                        return (React.createElement("div", { key: name, style: { display: "grid", gridTemplateColumns: "1fr auto auto", padding: "11px 16px", borderBottom: idx < staff.length - 1 ? "1px solid #0d1a22" : "none", alignItems: "center", gap: 12, background: isOnline ? "rgba(68,204,136,.04)" : idx % 2 === 0 ? "rgba(255,255,255,.01)" : "transparent" } },
-                            React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } },
-                                React.createElement("div", { style: { width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#1a3a4a,#0d2030)", border: `2px solid ${isOnline ? "#44cc88" : "#1a2a3a"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, flexShrink: 0 } }, name.charAt(0).toUpperCase()),
-                                React.createElement("div", null,
-                                    React.createElement("div", { style: { fontSize: 12, color: "#d0dce8", fontWeight: 500 } }, name),
-                                    isOnline && React.createElement("div", { style: { fontSize: 8, color: "#44cc88", display: "flex", alignItems: "center", gap: 3 } },
-                                        React.createElement("span", { style: { width: 5, height: 5, borderRadius: "50%", background: "#44cc88", display: "inline-block", animation: "pulse 1.5s infinite" } }),
-                                        "En l\u00EDnea"))),
-                            React.createElement("div", { style: { fontSize: 9, color: "#3a5a6a", paddingRight: 8, textAlign: "right" } }, lastLog ? React.createElement("span", { style: { color: "#4a7a8a" } },
-                                lastLog.date,
-                                " ",
-                                lastLog.ts) : React.createElement("span", { style: { color: "#2a3a4a" } }, "Sin accesos")),
-                            React.createElement("div", null,
-                                React.createElement("button", { onClick: () => removeStaff(name), disabled: isOnline, style: { background: isOnline ? "rgba(255,255,255,.04)" : "rgba(255,68,68,.1)", border: `1px solid ${isOnline ? "#1a2a3a" : "rgba(255,68,68,.3)"}`, color: isOnline ? "#2a3a4a" : "#ff7777", borderRadius: 6, padding: "4px 10px", cursor: isOnline ? "not-allowed" : "pointer", fontSize: 9, fontWeight: 600 } }, isOnline ? "En uso" : "✕ Quitar"))));
-                    })))))),
-    showPin && (React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,.88)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center" } },
-        React.createElement("div", { style: { background: "#0a0f16", border: "1px solid #3a2a0a", borderRadius: 16, padding: 28, width: 340, boxShadow: "0 30px 80px rgba(0,0,0,.8)" } },
-            React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 } },
-                React.createElement("div", null,
-                    React.createElement("div", { style: { fontSize: 9, letterSpacing: 3, color: "#c8964e", textTransform: "uppercase", marginBottom: 2 } }, isSuperAdmin ? "👑 Super Admin" : "🔐 Admin"),
-                    React.createElement("div", { style: { fontSize: 15, color: "#e0eaf0", fontWeight: 500 } }, "Cambiar Credenciales")),
-                React.createElement("button", { onClick: () => setShowPin(false), style: { background: "none", border: "none", color: "#3a5a6a", cursor: "pointer", fontSize: 18 } }, "\u2715")),
-            pOk ? (React.createElement("div", { style: { textAlign: "center", padding: "28px 0" } },
-                React.createElement("div", { style: { fontSize: 36, marginBottom: 10 } }, "\u2705"),
-                React.createElement("div", { style: { fontSize: 14, color: "#44cc88", fontWeight: 700, marginBottom: 4 } }, "\u00A1Guardado!"),
-                React.createElement("div", { style: { fontSize: 11, color: "#4a8a6a" } },
-                    pUser ? `Usuario: ${pUser}` : "",
-                    pNew && pUser ? " · " : "",
-                    pNew ? "PIN actualizado" : ""))) : (React.createElement("div", null,
-                React.createElement("div", { style: { background: "rgba(110,181,200,.06)", border: "1px solid rgba(110,181,200,.15)", borderRadius: 9, padding: "10px 14px", marginBottom: 18 } },
-                    React.createElement("div", { style: { fontSize: 8, color: "#4a6a7a", letterSpacing: 1, marginBottom: 5 } }, "CREDENCIALES ACTUALES"),
-                    React.createElement("div", { style: { display: "flex", gap: 16 } },
-                        React.createElement("div", null,
-                            React.createElement("div", { style: { fontSize: 8, color: "#3a5a6a" } }, "USUARIO"),
-                            React.createElement("div", { style: { fontSize: 12, color: "#c8d4e0", fontWeight: 600, marginTop: 2 } }, adminUser || "Admin")),
-                        React.createElement("div", null,
-                            React.createElement("div", { style: { fontSize: 8, color: "#3a5a6a" } }, "PIN"),
-                            React.createElement("div", { style: { fontSize: 12, color: "#c8d4e0", letterSpacing: 4, marginTop: 2 } }, "•".repeat(pin?.length || 4))))),
-                React.createElement("div", { style: { marginBottom: 14 } },
-                    React.createElement("div", { style: { fontSize: 9, color: "#6eb5c8", letterSpacing: 1, marginBottom: 5, textTransform: "uppercase" } }, "1. Confirma tu PIN actual"),
-                    React.createElement("input", { type: "password", value: pCur, onChange: e => { setPCur(e.target.value); setPErr(""); }, placeholder: "Escribe el PIN actual", style: { ...S.inputD, width: "100%", boxSizing: "border-box", letterSpacing: 4, fontSize: 16, textAlign: "center" }, autoFocus: true })),
-                React.createElement("div", { style: { fontSize: 9, color: "#2a4a5a", marginBottom: 10, textAlign: "center", letterSpacing: .5 } }, "\u2014 Deja vac\u00EDo lo que NO quieras cambiar \u2014"),
-                React.createElement("div", { style: { marginBottom: 12 } },
-                    React.createElement("div", { style: { fontSize: 9, color: "#6a8a9a", letterSpacing: 1, marginBottom: 5, textTransform: "uppercase" } }, "2. Nuevo nombre de usuario (opcional)"),
-                    React.createElement("input", { type: "text", value: pUser, onChange: e => { setPUser(e.target.value); setPErr(""); }, placeholder: `Ej: Fabinho  (actual: ${adminUser || "Admin"})`, style: { ...S.inputD, width: "100%", boxSizing: "border-box" } })),
-                React.createElement("div", { style: { marginBottom: 12 } },
-                    React.createElement("div", { style: { fontSize: 9, color: "#6a8a9a", letterSpacing: 1, marginBottom: 5, textTransform: "uppercase" } }, "3. Nuevo PIN (opcional)"),
-                    React.createElement("input", { type: "password", value: pNew, onChange: e => { setPNew(e.target.value); setPErr(""); }, placeholder: "M\u00EDnimo 4 caracteres", style: { ...S.inputD, width: "100%", boxSizing: "border-box", letterSpacing: 3 } })),
-                pNew.length > 0 && (React.createElement("div", { style: { marginBottom: 12 } },
-                    React.createElement("div", { style: { fontSize: 9, color: "#6a8a9a", letterSpacing: 1, marginBottom: 5, textTransform: "uppercase" } }, "4. Confirmar nuevo PIN"),
-                    React.createElement("input", { type: "password", value: pConf, onChange: e => { setPConf(e.target.value); setPErr(""); }, onKeyDown: e => e.key === "Enter" && doChangePin(), placeholder: "Repite el nuevo PIN", style: { ...S.inputD, width: "100%", boxSizing: "border-box", letterSpacing: 3 } }))),
-                pErr && (React.createElement("div", { style: { color: "#ff8888", fontSize: 11, marginBottom: 12, background: "rgba(255,68,68,.08)", border: "1px solid rgba(255,68,68,.25)", borderRadius: 7, padding: "8px 11px", display: "flex", alignItems: "center", gap: 7 } },
-                    React.createElement("span", { style: { fontSize: 14, flexShrink: 0 } }, "\u26A0\uFE0F"),
-                    React.createElement("span", null, pErr))),
-                React.createElement("div", { style: { display: "flex", gap: 7, marginTop: 4 } },
-                    React.createElement("button", { onClick: doChangePin, style: { ...S.btn("#c8964e"), flex: 1, fontSize: 12, padding: "10px" } }, "\uD83D\uDCBE Guardar cambios"),
-                    React.createElement("button", { onClick: () => { setShowPin(false); setPErr(""); }, style: { ...S.btn("#1a2a3a", "#6a8a9a"), fontSize: 12 } }, "Cancelar"))))))),
-    React.createElement("style", null, `@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}} button:hover{opacity:.82} input::placeholder,textarea::placeholder{color:#3a4a5a}`)));
-```
-
-}
-window.App=App;
+d && React.createElement(“span”, { style: { fontSize: 7, background: `${d.color}22`, border: `1px soli
