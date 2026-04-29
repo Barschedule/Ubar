@@ -36,7 +36,7 @@ var useCallback=React.useCallback;
 var _appScript = document.createElement('script');
 _appScript.src = "./app2.js?v=" + Date.now();
 _appScript.onload = function() {try {
-    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(InvApp));
     document.getElementById('sp').style.display = 'none';
   } catch(e) {
     document.getElementById('sp-err').style.display = 'block';
