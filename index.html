@@ -36,7 +36,9 @@ var useCallback=React.useCallback;
 var _appScript = document.createElement('script');
 _appScript.src = "./app2.js?v=" + Date.now();
 _appScript.onload = function() {try {
-    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(InvApp));
+    var comp = window.InvApp || window.App;
+if (!comp) throw new Error('No component found. Keys: ' + Object.keys(window).filter(k => k.length < 20).join(','));
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(comp));
     document.getElementById('sp').style.display = 'none';
   } catch(e) {
     document.getElementById('sp-err').style.display = 'block';
