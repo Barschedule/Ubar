@@ -933,4 +933,5 @@ React.createElement(“button”, { onClick: () => { setShowPin(false); setPErr(
 React.createElement(“style”, null, `@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}} button:hover{opacity:.82} input::placeholder,textarea::placeholder{color:#3a4a5a}`)));
 }
 
-window.App=App;
+window.App=InvApp;
+
