@@ -1,5 +1,3 @@
-window.onerror=function(m,s,l){document.getElementById('sp-err').style.display='block';document.getElementById('sp-err').textContent='JS Error: '+m+' line:'+l;};
-“use strict”;
 var DEFAULT_PIN=“1234”;
 var SUPER_ADMIN=“Fabinho”;
 var INIT_INV=[
