@@ -35,14 +35,15 @@ var useCallback=React.useCallback;
 <script>
 var _appScript = document.createElement('script');
 _appScript.src = "https://cdn.jsdelivr.net/gh/Barschedule/Ubar@906762e/app2.js";
-_appScript.onload = function() {try {
-    var comp = window.InvApp || window.App;
-if (!comp) {
-  document.getElementById('sp-err').style.display = 'block';
-  document.getElementById('sp-err').textContent = 'App: ' + typeof window.App + ' InvApp: ' + typeof window.InvApp + ' Keys: ' + Object.keys(window).filter(k => k.length < 15 && k[0] === k[0].toUpperCase()).join(',');
-  return;
-}
-ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(comp));
+_appScript.onload = function() {
+  var comp = window.App;
+  if (!comp) {
+    document.getElementById('sp-err').style.display = 'block';
+    document.getElementById('sp-err').textContent = 'App undefined after load';
+    return;
+  }
+  try {
+    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(comp));
     document.getElementById('sp').style.display = 'none';
   } catch(e) {
     document.getElementById('sp-err').style.display = 'block';
@@ -51,9 +52,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(
 };
 _appScript.onerror = function() {
   document.getElementById('sp-err').style.display = 'block';
-  document.getElementById('sp-err').textContent = 'Error: No se pudo cargar App.js';
+  document.getElementById('sp-err').textContent = 'No se pudo cargar App.js';
 };
 document.head.appendChild(_appScript);
+</script>
 </script>
 </body>
 </html>
