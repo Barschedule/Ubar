@@ -552,7 +552,7 @@ return ce(InvApp,{user:user,isAdmin:isAdmin,isSuper:isSuper,onLogout:handleLogou
         if (!root) { setTimeout(mountApp, 50); return; }
         ReactDOM.createRoot(root).render(React.createElement(App));
         document.getElementById('sp').style.display = 'none';
-      } catch(e) {
+} catch(e) {
         var err = document.getElementById('sp-err');
         if (err) {
           err.style.display = 'block';
