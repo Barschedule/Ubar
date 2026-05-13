@@ -539,23 +539,29 @@ return ce(InvApp,{user:user,isAdmin:isAdmin,isSuper:isSuper,onLogout:handleLogou
 }
 
 <script>
-window.addEventListener('load', function() {
-  try {
-    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
-    document.getElementById('sp').style.display = 'none';
-  } catch(e) {
-    document.getElementById('sp-err').style.display = 'block';
-    document.getElementById('sp-err').textContent = 'Error: ' + e.message;
-  }
-});
-</script>
-ReactDOM.createRoot(document.getElementById(‘root’)).render(React.createElement(App));
-document.getElementById(‘sp’).style.display=‘none’;
-}catch(e){
-document.getElementById(‘sp-err’).style.display=‘block’;
-document.getElementById(‘sp-err’).textContent=’Error: ’+e.message;
-}
-</script>
+  (function() {
+    function mountApp() {
+      try {
+        var root = document.getElementById('root');
+        if (!root) { setTimeout(mountApp, 50); return; }
+        ReactDOM.createRoot(root).render(React.createElement(App));
+        document.getElementById('sp').style.display = 'none';
+      } catch(e) {
+        var err = document.getElementById('sp-err');
+        if (err) {
+          err.style.display = 'block';
+          err.textContent = 'Error: ' + e.message;
+        }
+        console.error('Error al montar:', e);
+      }
+    }
 
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', mountApp);
+    } else {
+      mountApp();
+    }
+  })();
+</script>
 </body>
 </html>
