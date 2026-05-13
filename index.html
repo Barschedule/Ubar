@@ -26,6 +26,12 @@ body{font-family:Georgia,serif}
 <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js" crossorigin></script>
 <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js" crossorigin></script>
 <script>
+  window.onerror = function(msg, src, line, col, err) {
+    document.getElementById('sp-err').style.display = 'block';
+    document.getElementById('sp-err').textContent = 'L'+line+': '+msg;
+  };
+</script>
+<script>
 var useState=React.useState;
 var useEffect=React.useEffect;
 var useRef=React.useRef;
